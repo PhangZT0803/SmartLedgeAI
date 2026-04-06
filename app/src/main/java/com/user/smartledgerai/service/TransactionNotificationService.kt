@@ -16,9 +16,9 @@ class TransactionNotificationService : NotificationListenerService() {
             val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
             val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
 
-            Log.d("SmartLedger", "Package: $packageName")
-            Log.d("SmartLedger", "Title: $title")
-            Log.d("SmartLedger", "Text: $text")
+            //Log.d("SmartLedger", "Package: $packageName") UnitTest(Pass)
+            //Log.d("SmartLedger", "Title: $title")
+            //Log.d("SmartLedger", "Text: $text")
         }
 
         override fun onNotificationRemoved(sbn: StatusBarNotification?) {
