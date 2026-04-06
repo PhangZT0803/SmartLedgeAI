@@ -38,7 +38,7 @@ interface AccountDAO {
 
     @Query("""
         SELECT SUM(amount) FROM transactions 
-        WHERE timestamp BETWEEN :startDate AND :endDate 
+        WHERE timestamp BETWEEN :startDate AND :endDate
     """)
     fun getTotalExpense(startDate: Long, endDate: Long): Flow<Double?>
 }

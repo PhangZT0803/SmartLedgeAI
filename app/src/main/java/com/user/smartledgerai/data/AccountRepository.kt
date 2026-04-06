@@ -1,7 +1,6 @@
 package com.user.smartledgerai.data
 
 import kotlinx.coroutines.flow.Flow
-
 class AccountRepository(
     private val accountDao: AccountDAO,
     private val settingDao: SettingDAO

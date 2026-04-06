@@ -8,6 +8,7 @@ import androidx.room.RoomDatabase
     version = 1,
     exportSchema = false
 )
+
 abstract class AccountDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDAO
     abstract fun settingDao(): SettingDAO
