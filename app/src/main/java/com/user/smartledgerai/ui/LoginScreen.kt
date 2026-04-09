@@ -1,7 +1,6 @@
 package com.user.smartledgerai.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,22 +17,47 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.credentials.CredentialManager
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.user.smartledgerai.R
+import com.user.smartledgerai.viewmodel.AuthViewModel
+import timber.log.Timber
 
 @Composable
-fun OnBoarding() {
+fun OnBoarding(authViewModel:AuthViewModel = viewModel()) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val user by authViewModel.user.collectAsState()
+
+    LaunchedEffect(user) {
+        if (user != null) {
+            // TODO: 跳转主页
+        }
+    }
+
+    val credentialManager = remember { CredentialManager.create(context)}
+    val googleIdOption = remember{
+        GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(context.getString(R.string.default_web_client_id))
+            .build()
+    }
+    val scope = rememberCoroutineScope()
     Scaffold()
     { innerPadding ->
         Column(
@@ -48,7 +72,26 @@ fun OnBoarding() {
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedButton(
-                    onClick = {/*Google Login*/},
+                    onClick = { scope.launch {
+                        try {
+                            val request = GetCredentialRequest.Builder()
+                                .addCredentialOption(googleIdOption)
+                                .build()
+
+                            val result = credentialManager.getCredential(
+                                request = request,
+                                context = context
+                            )
+
+                            val credential = result.credential
+                            if (credential is GoogleIdTokenCredential) {
+                                viewModel.onGoogleSignInResult(credential.idToken)
+                            }
+                        } catch (e: Exception) {
+                            Timber.e("Sign-In failed: ${e.message}")
+                        }
+                    }
+                              },
                     modifier = Modifier.fillMaxWidth()
             ) {
                 //Login with google
@@ -100,6 +143,9 @@ fun OnBoarding() {
             }
 
         }
+
+
+
     }
 @Preview
 @Composable

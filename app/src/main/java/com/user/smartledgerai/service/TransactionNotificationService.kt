@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 
 
 data class NotificationParing(
@@ -23,7 +24,7 @@ class TransactionNotificationService : NotificationListenerService() {
     private val functions = Firebase.functions
 
         override fun onNotificationPosted(sbn: StatusBarNotification?) {
-            Log.d("SmartLedger", "Any notification received: ${sbn?.packageName}")
+            Timber.d("PackageReceive: ${sbn?.packageName}")
             sbn ?: return //android是用java写的,kotlin会对从java来的都做类似 variable! 意思是可能是null也可能是value也可能是什么都没有,必须要做null处理.
 
             val packageName = sbn.packageName //发出通知的APP(who)
@@ -49,9 +50,9 @@ class TransactionNotificationService : NotificationListenerService() {
                         .call(payload)
                         .await()
 
-                    Log.d("SmartLedger", "Function result: ${result.getData()}")
+                    Timber.d( "Function result: ${result.getData()}")
                 } catch (e: Exception) {
-                    Log.e("SmartLedger", "Function error: ${e.message}")
+                    Timber.e( "Function error: ${e.message}")
                 }
             }
         }
