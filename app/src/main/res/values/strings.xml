@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SmartLedgerAI</string>
+    <string name="notification_service_label">SmartLedger Notification Access</string>
 </resources>
