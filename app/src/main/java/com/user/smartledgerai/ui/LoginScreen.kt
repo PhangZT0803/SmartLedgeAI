@@ -31,10 +31,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.user.smartledgerai.R
 import com.user.smartledgerai.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
@@ -85,7 +88,7 @@ fun OnBoarding(authViewModel:AuthViewModel = viewModel()) {
 
                             val credential = result.credential
                             if (credential is GoogleIdTokenCredential) {
-                                viewModel.onGoogleSignInResult(credential.idToken)
+                                authViewModel.onGoogleSignInResult(credential.idToken)
                             }
                         } catch (e: Exception) {
                             Timber.e("Sign-In failed: ${e.message}")
