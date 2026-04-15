@@ -3,7 +3,8 @@ package com.user.smartledgerai.data
 import kotlinx.coroutines.flow.Flow
 class AccountRepository(
     private val accountDao: AccountDAO,
-    private val settingDao: SettingDAO
+    private val settingDao: SettingDAO,
+    private val allowedApp: AllowedAppDAO
 ) {
 
     val allAccounts: Flow<List<Account>> = accountDao.getAllAccounts()
@@ -17,4 +18,9 @@ class AccountRepository(
 
     fun getTotalExpense(start: Long, end: Long): Flow<Double?> =
         accountDao.getTotalExpense(start, end)
+
+    fun getAllAllowedApp(): Flow<List<AllowedApp>> = allowedApp.getAllAllowedApp()
+
+    suspend fun insertAllowedApp(app: AllowedApp) = allowedApp.insert(app)
+    suspend fun deleteAllowedApp(packageName: String) = allowedApp.delete(packageName)
 }

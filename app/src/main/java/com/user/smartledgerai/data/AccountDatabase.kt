@@ -4,7 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [Account::class, Setting::class],
+    entities = [Account::class, Setting::class, AllowedApp::class],
     version = 1,
     exportSchema = false
 )
@@ -12,4 +12,6 @@ import androidx.room.RoomDatabase
 abstract class AccountDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDAO
     abstract fun settingDao(): SettingDAO
+
+    abstract fun allowedAppDao(): AllowedAppDAO
 }

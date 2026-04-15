@@ -31,27 +31,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.user.smartledgerai.R
+import com.user.smartledgerai.ui.navigation.Screen
 import com.user.smartledgerai.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
-fun OnBoarding(authViewModel:AuthViewModel = viewModel()) {
+fun OnBoardingScreen(authViewModel:AuthViewModel = viewModel()) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
     val user by authViewModel.user.collectAsState()
-
-    LaunchedEffect(user) {
-        if (user != null) {
-            // TODO: 跳转主页
-        }
-    }
 
     val credentialManager = remember { CredentialManager.create(context)}
     val googleIdOption = remember{
@@ -87,8 +83,11 @@ fun OnBoarding(authViewModel:AuthViewModel = viewModel()) {
                             )
 
                             val credential = result.credential
-                            if (credential is GoogleIdTokenCredential) {
-                                authViewModel.onGoogleSignInResult(credential.idToken)
+
+                            if(credential is CustomCredential &&
+                                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL){
+                                val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data)
+                                authViewModel.onGoogleSignInResult(googleIdToken.idToken)
                             }
                         } catch (e: Exception) {
                             Timber.e("Sign-In failed: ${e.message}")
@@ -152,6 +151,6 @@ fun OnBoarding(authViewModel:AuthViewModel = viewModel()) {
     }
 @Preview
 @Composable
-fun PreviewOnBoading(){
-    OnBoarding()
+fun PreviewOnBoadingScreen(){
+    OnBoardingScreen()
 }

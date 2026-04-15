@@ -14,6 +14,6 @@ interface SettingDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSetting(setting: Setting)
 
-    @Query("SELECT value FROM settings WHERE key = :key")
+    @Query("SELECT value FROM settings WHERE value = :key")
     fun getSettingValue(key: String): Flow<String?>
 }

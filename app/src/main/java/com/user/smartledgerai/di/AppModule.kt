@@ -28,5 +28,5 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAccountRepository(db: AccountDatabase): AccountRepository =
-        AccountRepository(db.accountDao(), db.settingDao())
+        AccountRepository(db.accountDao(), db.settingDao(),db.allowedAppDao())
 }

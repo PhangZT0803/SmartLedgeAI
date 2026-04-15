@@ -13,9 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.user.smartledgerai.ui.navigation.MainNavigation
 import com.user.smartledgerai.ui.theme.SmartLedgerAITheme
 import com.user.smartledgerai.utils.PermissionUtils
+import dagger.hilt.android.AndroidEntryPoint
 
+    @AndroidEntryPoint
     class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,10 +26,7 @@ import com.user.smartledgerai.utils.PermissionUtils
         setContent {
             SmartLedgerAITheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    MainNavigation()
                 }
             }
         }
@@ -36,21 +36,5 @@ import com.user.smartledgerai.utils.PermissionUtils
         if (!PermissionUtils.isNotificationListenerEnable(this)) {
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SmartLedgerAITheme {
-        Greeting("Android")
     }
 }
