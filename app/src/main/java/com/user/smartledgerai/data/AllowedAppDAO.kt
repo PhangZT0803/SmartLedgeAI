@@ -11,6 +11,9 @@ interface AllowedAppDAO {
     @Query("SELECT * FROM AllowedApp")
     fun  getAllAllowedApp(): Flow<List<AllowedApp>>
 
+    @Query("SELECT * FROM AllowedApp")
+    suspend fun getAllowedAppList(): List<AllowedApp>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(app: AllowedApp)
 

@@ -14,8 +14,11 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     object Verify : Screen("verify", "Verify", Icons.Default.Rule)
     object History : Screen("history", "History", Icons.Default.History)
     object Profile : Screen("profile", "Profile", Icons.Default.Person)
-
     object AppSelection : Screen("appSelection", "AppSelection", Icons.Default.Apps)
+
+    object Categories :Screen("categories", "Categories", Icons.Default.Apps)
+
+    object NewTransaction : Screen("newTransaction", "NewTransaction", Icons.Default.Apps)
 }
 
 sealed class ProfileScreenNavigationAction{
@@ -26,5 +29,6 @@ val bottomNavItems = listOf(
     Screen.Dashboard,
     Screen.Verify,
     Screen.History,
-    Screen.Profile
+    Screen.Profile,
+    Screen.NewTransaction
 )

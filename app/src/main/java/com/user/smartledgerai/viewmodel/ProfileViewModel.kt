@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.user.smartledgerai.data.AccountRepository
+import com.user.smartledgerai.data.TransactionRepository
 import com.user.smartledgerai.data.AllowedApp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor(private val repository: AccountRepository,@ApplicationContext private val context: Context) : ViewModel() {
+class ProfileViewModel @Inject constructor(private val repository: TransactionRepository, @ApplicationContext private val context: Context) : ViewModel() {
     private val _installedApp =
         MutableStateFlow<List<AppInfo>>(emptyList<AppInfo>())//修改的,因为是一次性所以使用MutableStateFlow
     val installedApp: StateFlow<List<AppInfo>> = _installedApp  //UI读取

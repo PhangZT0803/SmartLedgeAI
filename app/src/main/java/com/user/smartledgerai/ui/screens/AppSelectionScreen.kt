@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -105,21 +104,4 @@ fun AppItem(appInfo: AppInfo,isAllowed:Boolean,onToggle:()->Unit) {
             Switch(isAllowed,onCheckedChange = {onToggle()})
         }
     }
-}
-
-@Preview
-@Composable
-fun PreviewAppSelectionScreen(){
-    AppSelectionContent (
-        installedApps = listOf(
-            AppInfo("com.grab","Grab",null),
-            AppInfo("com.touchngo","TouchnGo",null)
-            ),
-        allowedApps = listOf(
-            AllowedApp("com.touchngo","TouchnGo")
-        ),
-        searchText = "",
-        onQueryChange = {},
-        onToggleApp = {_,_ ->}
-    )
 }

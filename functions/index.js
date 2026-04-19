@@ -50,7 +50,6 @@ exports.parseNotification = onCall(
     {
         "isTransaction": boolean,
         "amount": number | null,
-        "curren"
         "currency": string | null ,
         "reason":string
     }

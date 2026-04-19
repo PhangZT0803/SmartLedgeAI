@@ -3,9 +3,13 @@ package com.user.smartledgerai.service
 import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import android.util.Log
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.functions.ktx.functions
+import com.user.smartledgerai.data.AllowedAppDAO
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,9 +24,24 @@ data class NotificationParing(
     val bigText: String,
     val ticker: String
 )
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface ServiceEntryPoint{
+    fun allowedAppDao(): AllowedAppDAO
+}
 class TransactionNotificationService : NotificationListenerService() {
     private val functions = Firebase.functions
+    private lateinit var allowedAppDAO: AllowedAppDAO
 
+    override fun onCreate(){
+        super.onCreate()
+        val entryPoint = EntryPointAccessors.fromApplication(
+            applicationContext,
+            ServiceEntryPoint::class.java
+        )
+        allowedAppDAO = entryPoint.allowedAppDao()
+    }
         override fun onNotificationPosted(sbn: StatusBarNotification?) {
             Timber.d("PackageReceive: ${sbn?.packageName}")
             sbn ?: return //android是用java写的,kotlin会对从java来的都做类似 variable! 意思是可能是null也可能是value也可能是什么都没有,必须要做null处理.
@@ -55,9 +74,5 @@ class TransactionNotificationService : NotificationListenerService() {
                     Timber.e( "Function error: ${e.message}")
                 }
             }
-        }
-
-        override fun onNotificationRemoved(sbn: StatusBarNotification?) {
-            // 暂时留空
         }
 }

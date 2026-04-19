@@ -16,4 +16,6 @@ interface SettingDAO {
 
     @Query("SELECT value FROM settings WHERE value = :key")
     fun getSettingValue(key: String): Flow<String?>
+
+
 }

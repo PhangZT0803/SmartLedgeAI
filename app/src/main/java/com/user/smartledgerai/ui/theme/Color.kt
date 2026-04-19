@@ -2,62 +2,65 @@ package com.user.smartledgerai.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Colors from Stitch Design
-val Primary = Color(0xFF004471)
-val OnPrimary = Color(0xFFFFFFFF)
-val PrimaryContainer = Color(0xFF005C97)
-val OnPrimaryContainer = Color(0xFFADD3FF)
+// ==========================================
+// Light Theme Colors (Bright, Clean, Trustworthy)
+// ==========================================
+val PrimaryLight = Color(0xFF4F46E5) // Electric Indigo (Brand & Action)
+val OnPrimaryLight = Color(0xFFFFFFFF)
+val PrimaryContainerLight = Color(0xFFE0E7FF) // Soft highlight for AI cards
+val OnPrimaryContainerLight = Color(0xFF312E81)
 
-val Secondary = Color(0xFF006A6A)
-val OnSecondary = Color(0xFFFFFFFF)
-val SecondaryContainer = Color(0xFF90EFEF)
-val OnSecondaryContainer = Color(0xFF006E6E)
+val SecondaryLight = Color(0xFF14B8A6) // Mint Teal (Secondary actions/badges)
+val OnSecondaryLight = Color(0xFFFFFFFF)
+val SecondaryContainerLight = Color(0xFFCCFBF1)
+val OnSecondaryContainerLight = Color(0xFF134E4A)
 
-val Tertiary = Color(0xFF693300)
-val OnTertiary = Color(0xFFFFFFFF)
-val TertiaryContainer = Color(0xFF8B4602)
-val OnTertiaryContainer = Color(0xFFFFC39A)
+val TertiaryLight = Color(0xFFF59E0B) // Amber/Gold (AI Warnings, Match Rates)
+val OnTertiaryLight = Color(0xFFFFFFFF)
+val TertiaryContainerLight = Color(0xFFFEF3C7)
+val OnTertiaryContainerLight = Color(0xFF78350F)
 
-val Background = Color(0xFFF8F9FC)
-val OnBackground = Color(0xFF191C1E)
+val BackgroundLight = Color(0xFFF8FAFC) // Slate 50 (Slightly cooler than pure white)
+val OnBackgroundLight = Color(0xFF0F172A)
+val SurfaceLight = Color(0xFFFFFFFF) // Pure white for cards to pop
+val OnSurfaceLight = Color(0xFF1E293B)
+val SurfaceVariantLight = Color(0xFFF1F5F9) // Card outlines/dividers
+val OnSurfaceVariantLight = Color(0xFF64748B)
 
-val Surface = Color(0xFFF8F9FC)
-val OnSurface = Color(0xFF191C1E)
-val SurfaceContainerLow = Color(0xFFF2F4F6)
-val SurfaceContainer = Color(0xFFECEEF0)
-val SurfaceContainerHighest = Color(0xFFE1E2E5)
+val OutlineLight = Color(0xFFCBD5E1)
 
-val Outline = Color(0xFF717881)
-val OutlineVariant = Color(0xFFC1C7D1)
+// ==========================================
+// Dark Theme Colors (Deep, Tech, Immersive)
+// ==========================================
+val PrimaryDark = Color(0xFF818CF8) // Lighter Indigo for dark mode visibility
+val OnPrimaryDark = Color(0xFFFFFFFF)
+val PrimaryContainerDark = Color(0xFF3730A3)
+val OnPrimaryContainerDark = Color(0xFFE0E7FF)
 
-// Dark Colors (Branded)
-val PrimaryDark = Color(0xFFB8C8FF)
-val OnPrimaryDark = Color(0xFF003060)
-val PrimaryContainerDark = Color(0xFF004471)
-val OnPrimaryContainerDark = Color(0xFFD0E4FF)
+val SecondaryDark = Color(0xFF2DD4BF)
+val OnSecondaryDark = Color(0xFF042F2E)
+val SecondaryContainerDark = Color(0xFF115E59)
+val OnSecondaryContainerDark = Color(0xFFCCFBF1)
 
-val SecondaryDark = Color(0xFF76D6D5)
-val OnSecondaryDark = Color(0xFF003737)
-val SecondaryContainerDark = Color(0xFF004F4F)
-val OnSecondaryContainerDark = Color(0xFF90EFEF)
+val TertiaryDark = Color(0xFFFBBF24)
+val OnTertiaryDark = Color(0xFF451A03)
+val TertiaryContainerDark = Color(0xFF78350F)
+val OnTertiaryContainerDark = Color(0xFFFEF3C7)
 
-val TertiaryDark = Color(0xFFFFB784)
-val OnTertiaryDark = Color(0xFF4B2400)
-val TertiaryContainerDark = Color(0xFF693300)
-val OnTertiaryContainerDark = Color(0xFFFFDCC5)
+val BackgroundDark = Color(0xFF0F172A) // Deep Night Black
+val OnBackgroundDark = Color(0xFFF8FAFC)
+val SurfaceDark = Color(0xFF1E293B) // Slightly elevated for cards
+val OnSurfaceDark = Color(0xFFF1F5F9)
+val SurfaceVariantDark = Color(0xFF334155)
+val OnSurfaceVariantDark = Color(0xFF94A3B8)
 
-val BackgroundDark = Color(0xFF191C1E)
-val OnBackgroundDark = Color(0xFFE1E2E5)
+val OutlineDark = Color(0xFF475569)
 
-val SurfaceDark = Color(0xFF191C1E)
-val OnSurfaceDark = Color(0xFFE1E2E5)
-val SurfaceVariantDark = Color(0xFF414750)
-val OnSurfaceVariantDark = Color(0xFFC1C7D1)
-
-// Keep template colors for compatibility if needed elsewhere
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// ==========================================
+// Semantic Colors (Essential for Ledger App)
+// ==========================================
+// Usage: Do not put these in MaterialTheme, call them directly for +/- amounts
+val ExpenseColorLight = Color(0xFFEF4444) // Rose Red
+val ExpenseColorDark = Color(0xFFF87171)
+val IncomeColorLight = Color(0xFF10B981)  // Emerald Green
+val IncomeColorDark = Color(0xFF34D399)

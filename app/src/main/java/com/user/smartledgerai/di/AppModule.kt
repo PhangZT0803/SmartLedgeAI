@@ -2,8 +2,9 @@ package com.user.smartledgerai.di
 
 import android.content.Context
 import androidx.room.Room
-import com.user.smartledgerai.data.AccountDatabase
-import com.user.smartledgerai.data.AccountRepository
+import com.user.smartledgerai.data.TransactionDatabase
+import com.user.smartledgerai.data.TransactionRepository
+import com.user.smartledgerai.data.AllowedAppDAO
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,10 +17,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AccountDatabase =
+    fun provideDatabase(@ApplicationContext context: Context): TransactionDatabase =
         Room.databaseBuilder(
             context,
-            AccountDatabase::class.java,
+            TransactionDatabase::class.java,
             "smartledger.db"
         )
             .fallbackToDestructiveMigration()
@@ -27,6 +28,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAccountRepository(db: AccountDatabase): AccountRepository =
-        AccountRepository(db.accountDao(), db.settingDao(),db.allowedAppDao())
+    fun provideAccountRepository(db: TransactionDatabase): TransactionRepository =
+        TransactionRepository(db.transactionDao(),db.categoryDao(), db.settingDao(),db.allowedAppDao())
+
+    @Provides
+    fun provideAllowedAppDao(db: TransactionDatabase): AllowedAppDAO =
+        db.allowedAppDao()
 }

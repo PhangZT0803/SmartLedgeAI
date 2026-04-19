@@ -17,8 +17,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,26 +26,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.user.smartledgerai.R
-import com.user.smartledgerai.ui.navigation.Screen
 import com.user.smartledgerai.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
-fun OnBoardingScreen(authViewModel:AuthViewModel = viewModel()) {
+fun OnBoardingScreen(authViewModel:AuthViewModel) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val user by authViewModel.user.collectAsState()
 
     val credentialManager = remember { CredentialManager.create(context)}
     val googleIdOption = remember{
@@ -149,8 +143,3 @@ fun OnBoardingScreen(authViewModel:AuthViewModel = viewModel()) {
 
 
     }
-@Preview
-@Composable
-fun PreviewOnBoadingScreen(){
-    OnBoardingScreen()
-}
