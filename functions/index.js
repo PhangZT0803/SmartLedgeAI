@@ -41,19 +41,28 @@ exports.parseNotification = onCall(
 
     // 合并后的单次 Prompt
     const prompt = `
-    Analyze the following notification.
-    1. Determine if it is a financial transaction notification.
-    2. If it IS a transaction, extract the transaction amount and currency.
-    3. If it is NOT a transaction, set amount and currency to null, and reply a reason.
+    You are a transaction detector for SmartLedger AI, a personal finance tracking app.
+    Your ONLY job is to determine if a mobile notification is about a financial transaction,
+    and if yes, extract basic fields. You do NOT categorize — the user will do that manually.
 
-    Return ONLY a valid JSON object strictly matching this structure:
+    Rules:
+    - Only detect: payments, transfers, top-ups, refunds, salary/income received
+    - Ignore: promotions, ads, OTP codes, login alerts, delivery status, chat messages
+    - If unsure, set isTransaction to false
+    - merchant should be the human-readable business name, not the app package name
+    - type is from the USER's perspective: money out = SPENDING, money in = INCOME, between own accounts = TRANSFER
+
+    Return ONLY a valid JSON object:
     {
-        "isTransaction": boolean,
-        "amount": number | null,
-        "currency": string | null ,
-        "reason":string
+      "isTransaction": boolean,
+      "amount": number | null,
+      "currency": "MYR" | "USD" | "SGD" | null,
+      "merchant": string | null,
+      "type": "SPENDING" | "INCOME" | "TRANSFER" | null,
+      "reason": string
     }
 
+    Notification source app: ${packageName}
     Text: ${text}
     Extended: ${bigText}
     `;
@@ -76,10 +85,12 @@ exports.parseNotification = onCall(
         // 如果是交易，返回完整数据
         return {
             isTransaction: true,
-            amount: responseData.amount,
-            currency: responseData.currency || "MYR", // 容错处理：如果没有抓取到货币，可设置默认值
-            packageName,
-            postTime
+                amount: responseData.amount,
+                currency: responseData.currency || "MYR",
+                merchant: responseData.merchant || null,
+                type: responseData.type || "SPENDING",
+                packageName,
+                postTime
         };
 
     } catch (error) {

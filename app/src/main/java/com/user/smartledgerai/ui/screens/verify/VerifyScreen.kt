@@ -1,5 +1,6 @@
 package com.user.smartledgerai.ui.screens.verify
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.user.smartledgerai.data.Transaction
@@ -87,7 +89,7 @@ fun VerifyScreen(
     val displayDate = dateFormatter.format(
         Date(datePickerState.selectedDateMillis ?: currentTransaction.timestamp)
     )
-
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -171,11 +173,25 @@ fun VerifyScreen(
             // ── 操作按钮 ──
             Button(
                 onClick = {
-                    // TODO: 用 ViewModel 更新 transaction（设 isVerified = true + 用户修改的值）
+                    if(selectedCategoryId == -1){
+                        Toast.makeText(context,"Please select a category",Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    val parsedAmount = amount.toDoubleOrNull() ?: return@Button
+                    transactionViewModel.verifyTransaction(
+                        original = currentTransaction,
+                        amount = parsedAmount,
+                        currency = currency,
+                        merchant = toField,
+                        source = fromAccount,
+                        categoryId = selectedCategoryId,
+                        timestamp = datePickerState.selectedDateMillis ?: currentTransaction.timestamp,
+                        description = note.ifBlank { null }
+                    )
                     if (currentIndex < pendingTransactions.size - 1) {
-                        currentIndex++  // 下一条
+                        currentIndex++
                     } else {
-                        onSave()  // 全部验证完，返回
+                        onSave() //处理完回去主页面
                     }
                 },
                 modifier = Modifier

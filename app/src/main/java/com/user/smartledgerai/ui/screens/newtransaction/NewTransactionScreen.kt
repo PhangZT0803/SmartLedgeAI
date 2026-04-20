@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.user.smartledgerai.data.Transaction
 import com.user.smartledgerai.data.TransactionType
 import com.user.smartledgerai.viewmodel.TransactionViewModel
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -118,7 +119,22 @@ fun NewTransactionScreen(
             NoteSection(note = note, onNoteChange = { note = it })
 
             Button(
-                onClick = { onSave() },
+                onClick = {
+                    val parsedAmount = amount.toDoubleOrNull() ?: return@Button
+                    transactionViewModel.insertTransaction(
+                        Transaction(
+                            amount = parsedAmount,
+                            currency = currency,
+                            transactionType = selectedType,
+                            merchant = toField,
+                            source = fromAccount,
+                            categoryId = selectedCategoryId,
+                            timestamp = datePickerState.selectedDateMillis ?: System.currentTimeMillis(),
+                            description = note.ifBlank { null },
+                            isVerified = true
+                        )
+                    )
+                    onSave() }, //Todo Save 清空,连续input
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),

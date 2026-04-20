@@ -28,10 +28,14 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAccountRepository(db: TransactionDatabase): TransactionRepository =
+    fun provideTransactionRepository(db: TransactionDatabase): TransactionRepository =
         TransactionRepository(db.transactionDao(),db.categoryDao(), db.settingDao(),db.allowedAppDao())
 
     @Provides
     fun provideAllowedAppDao(db: TransactionDatabase): AllowedAppDAO =
         db.allowedAppDao()
+
+    @Provides
+    fun provideTransactionDao(db: TransactionDatabase) =
+        db.transactionDao()
 }

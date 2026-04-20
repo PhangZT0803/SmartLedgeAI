@@ -71,8 +71,7 @@ fun MainNavigation() {
                 VerifyScreen(
                     transactionsToEdit,
                     transactionViewModel,
-                    onBack = { navController.popBackStack() },
-                    onSave = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() }
                     )
             }
             composable(Screen.NewTransaction.route) { NewTransactionScreen(transactionViewModel,false,null) }

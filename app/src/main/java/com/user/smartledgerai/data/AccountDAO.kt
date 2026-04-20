@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AccountDAO {
-    @Query("SELECT * FROM accounts")
+    @Query("SELECT * FROM Account")
     fun getAllAccounts(): Flow<List<Account>>
 }
