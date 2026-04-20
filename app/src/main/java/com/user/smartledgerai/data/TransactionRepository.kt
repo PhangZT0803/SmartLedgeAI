@@ -8,7 +8,7 @@ class TransactionRepository(
     private val allowedApp: AllowedAppDAO
 ) {
 
-    val getAllAccounts: Flow<List<Transaction>> = transactionDao.getAllTransaction()
+    val getAllTransaction: Flow<List<Transaction>> = transactionDao.getAllTransaction()
 
     suspend fun insert(transaction: Transaction) = transactionDao.insertTransaction(transaction)
     suspend fun delete(id: Int) = transactionDao.deleteTransaction(id)
