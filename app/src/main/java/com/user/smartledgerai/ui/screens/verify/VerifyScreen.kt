@@ -173,7 +173,7 @@ fun VerifyScreen(
             // ── 操作按钮 ──
             Button(
                 onClick = {
-                    if(selectedCategoryId == -1){
+                    if(selectedCategoryId == -1 && selectedType != TransactionType.TRANSFER){
                         Toast.makeText(context,"Please select a category",Toast.LENGTH_SHORT).show()
                         return@Button
                     }

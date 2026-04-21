@@ -62,4 +62,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             )
         )
     }
+    fun insertCategory(category: Category) = viewModelScope.launch {
+        transactionRepository.insertCategory(category)
+    }
 }

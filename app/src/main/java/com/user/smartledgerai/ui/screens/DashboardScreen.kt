@@ -1,7 +1,9 @@
 package com.user.smartledgerai.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,11 +13,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.user.smartledgerai.data.Transaction
+import com.user.smartledgerai.ui.theme.AiGradient
 import com.user.smartledgerai.viewmodel.TransactionViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -23,13 +29,15 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(transactionViewModel: TransactionViewModel) {
+fun DashboardScreen(transactionViewModel: TransactionViewModel,onAction:()->Unit){
     val transactions by transactionViewModel.transactions.collectAsState()
+    val verifiedTransactions = transactions.filter { it.isVerified }
+
     val colors = MaterialTheme.colorScheme
     val typo = MaterialTheme.typography
 
     // TODO: 之后从 ViewModel 拿月度统计
-    val totalBalance = transactions.sumOf { tx ->
+    val totalBalance = verifiedTransactions.sumOf { tx ->
         when (tx.transactionType) {
             com.user.smartledgerai.data.TransactionType.INCOME -> tx.amount
             com.user.smartledgerai.data.TransactionType.SPENDING -> -tx.amount
@@ -61,36 +69,49 @@ fun DashboardScreen(transactionViewModel: TransactionViewModel) {
             item { Spacer(modifier = Modifier.height(8.dp)) }
 
             // Balance
-            item { BalanceSection(totalBalance = totalBalance) }
+            item { ImmersiveBalanceCard(totalBalance = totalBalance) }
 
             // Quick Stats
-            item { QuickStatsRow(transactions = transactions) }
+            item { QuickStatsRow(verifiedTransactions = verifiedTransactions) }
 
             // Recent Transactions
             item {
-                Text(
-                    text = "Recent Transactions",
-                    style = typo.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-            }
+                // 1. 用一个 Row 处理头部，让文字和按钮左右分布
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween, // 左右对齐
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Recent Transactions",
+                        style = typo.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
 
-            if (transactions.isEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 48.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "No transactions yet",
-                            color = colors.onSurfaceVariant
+                    TextButton(onClick = { onAction() }) {
+                        Text("View All")
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            Icons.Default.ArrowOutward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
+            }
+
+// 2. 列表项依然直接放在 LazyColumn 下，保持纵向排列
+            if (verifiedTransactions.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No transactions yet", color = colors.onSurfaceVariant)
+                    }
+                }
             } else {
-                items(transactions.take(10)) { tx ->
-                    TransactionRow(tx)
+                items(verifiedTransactions.take(10)) { tx ->
+                    TransactionRow(tx) // 每一条记录会自动换行显示
                 }
             }
         }
@@ -98,40 +119,71 @@ fun DashboardScreen(transactionViewModel: TransactionViewModel) {
 }
 
 @Composable
-private fun BalanceSection(totalBalance: Double) {
+private fun ImmersiveBalanceCard(totalBalance: Double) {
     val colors = MaterialTheme.colorScheme
-    val typo = MaterialTheme.typography
 
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = "TOTAL BALANCE",
-            style = typo.labelMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 2.sp
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .shadow(
+                elevation = 16.dp,
+                shape = RoundedCornerShape(28.dp),
+                spotColor = colors.primary,
+                ambientColor = colors.secondary
             ),
-            color = colors.onSurfaceVariant
-        )
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = "RM ",
-                style = typo.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = colors.primary.copy(alpha = 0.6f)
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AiGradient) // 使用你定义的 AI 渐变色
+                .padding(24.dp)
+        ) {
+            // 背景装饰：半透明的大图标
+            Icon(
+                Icons.Default.AutoAwesome,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(160.dp)
+                    .align(Alignment.BottomEnd)
+                    .offset(x = 24.dp, y = 24.dp)
+                    .graphicsLayer(alpha = 0.1f, rotationZ = -15f),
+                tint = Color.White
             )
-            Text(
-                text = String.format("%,.2f", totalBalance),
-                style = typo.displayMedium.copy(fontWeight = FontWeight.ExtraBold),
-                color = colors.primary
-            )
+
+            Column {
+                Text(
+                    text = "Total Balance",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = "RM ",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                    Text(
+                        text = String.format("%,.2f", totalBalance),
+                        style = MaterialTheme.typography.displayLarge,
+                        color = Color.White
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun QuickStatsRow(transactions: List<Transaction>) {
-    val income = transactions
+private fun QuickStatsRow(verifiedTransactions: List<Transaction>) {
+    val income = verifiedTransactions
         .filter { it.transactionType == com.user.smartledgerai.data.TransactionType.INCOME }
         .sumOf { it.amount }
-    val spending = transactions
+    val spending = verifiedTransactions
         .filter { it.transactionType == com.user.smartledgerai.data.TransactionType.SPENDING }
         .sumOf { it.amount }
 
@@ -206,8 +258,8 @@ private fun TransactionRow(tx: Transaction) {
 
     Surface(
         color = colors.surface,
-        shape = RoundedCornerShape(16.dp),
-        shadowElevation = 1.dp,
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -216,15 +268,15 @@ private fun TransactionRow(tx: Transaction) {
         ) {
             // Icon
             Surface(
-                modifier = Modifier.size(44.dp),
-                color = colors.surfaceVariant,
-                shape = CircleShape
+                modifier = Modifier.size(48.dp),
+                color = if(isSpending) colors.errorContainer else colors.primaryContainer.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(
                     if (isSpending) Icons.Default.ArrowOutward else Icons.Default.ArrowDownward,
                     contentDescription = null,
-                    tint = colors.primary,
-                    modifier = Modifier.padding(10.dp)
+                    tint = if(isSpending) colors.error else colors.primary,
+                    modifier = Modifier.padding(12.dp)
                 )
             }
 
@@ -234,19 +286,20 @@ private fun TransactionRow(tx: Transaction) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = tx.merchant,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = dateStr,
                     style = MaterialTheme.typography.labelSmall,
-                    color = colors.onSurfaceVariant
+                    color = colors.onSurfaceVariant.copy(alpha = 0.8f)
                 )
             }
 
             // Amount
             Text(
                 text = "${if (isSpending) "-" else "+"} RM ${String.format("%,.2f", tx.amount)}",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = if (isSpending)
                     com.user.smartledgerai.ui.theme.ExpenseColorLight
                 else

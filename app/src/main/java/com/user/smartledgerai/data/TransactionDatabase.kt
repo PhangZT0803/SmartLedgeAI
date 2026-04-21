@@ -17,4 +17,6 @@ abstract class TransactionDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDAO
     abstract fun settingDao(): SettingDAO
     abstract fun allowedAppDao(): AllowedAppDAO
+
+    abstract fun accountDao(): AccountDAO
 }

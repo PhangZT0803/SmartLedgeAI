@@ -5,7 +5,8 @@ class TransactionRepository(
     private val transactionDao: TransactionDAO,
     private val categoryDao: CategoryDAO,
     private val settingDao: SettingDAO,
-    private val allowedApp: AllowedAppDAO
+    private val allowedApp: AllowedAppDAO,
+    private val accountDao: AccountDAO
 ) {
 
     val getAllTransaction: Flow<List<Transaction>> = transactionDao.getAllTransaction()
@@ -30,4 +31,6 @@ class TransactionRepository(
     fun getAllCategories(): Flow<List<Category>> = categoryDao.getAllCategories()
 
     fun getCategoriesByType(transactionType: TransactionType): Flow<List<Category>> = categoryDao.getCategoriesByType(transactionType)
+
+    suspend fun insertCategory(category: Category) = categoryDao.insertCategory(category)
 }

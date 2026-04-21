@@ -1,6 +1,16 @@
 package com.user.smartledgerai.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -10,6 +20,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.user.smartledgerai.data.Transaction
 import com.user.smartledgerai.ui.screens.AppSelectionScreen
+import com.user.smartledgerai.ui.screens.CategoriesScreen
 import com.user.smartledgerai.ui.screens.DashboardScreen
 import com.user.smartledgerai.ui.screens.HistoryScreen
 import com.user.smartledgerai.ui.screens.newtransaction.NewTransactionScreen
@@ -35,6 +46,15 @@ fun MainNavigation() {
         }
 
     Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                navController.navigate(Screen.NewTransaction.route)},
+                containerColor = MaterialTheme.colorScheme.primary,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "New")
+            }
+        },
         bottomBar = {
             if(user != null){
             NavigationBar {
@@ -63,10 +83,52 @@ fun MainNavigation() {
         NavHost(
             navController = navController,
             startDestination = Screen.Login.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+
+                    // 1. 进入新页面时：从右向左滑入 + 淡入
+                    enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(300))
+            },
+            // 2. 离开当前页面时：向左轻微滑动推出 + 淡出
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> -fullWidth / 3 },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            },
+            // 3. 按返回键回到上个页面时：从左向右滑入 + 淡入
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> -fullWidth / 3 },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(300))
+            },
+            // 4. 按返回键退出当前页面时：向右滑出 + 淡出
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            }
         ) {
             composable (Screen.Login.route){ OnBoardingScreen(authViewModel)}
-            composable(Screen.Dashboard.route) { DashboardScreen(transactionViewModel) }
+            composable(
+                Screen.Dashboard.route,
+                enterTransition = { fadeIn(animationSpec = tween(300)) },
+                exitTransition = { fadeOut(animationSpec = tween(300)) },
+                popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+                popExitTransition = { fadeOut(animationSpec = tween(300)) }
+            ) {
+                DashboardScreen(
+                    transactionViewModel,
+                    onAction={
+                        navController.navigate(Screen.History.route)
+                    }
+                )
+            }
             composable(Screen.Verify.route) {
                 VerifyScreen(
                     transactionsToEdit,
@@ -74,19 +136,36 @@ fun MainNavigation() {
                     onBack = { navController.popBackStack() }
                     )
             }
-            composable(Screen.NewTransaction.route) { NewTransactionScreen(transactionViewModel,false,null) }
+            composable(
+                Screen.NewTransaction.route,
+                // 从底部弹出
+                enterTransition = { slideInVertically(initialOffsetY = { it }) + fadeIn() },
+                // 向底部收起
+                popExitTransition = { slideOutVertically(targetOffsetY = { it }) + fadeOut() }
+            ) {
+                NewTransactionScreen(
+                    transactionViewModel,
+                    false,
+                    null)
+            }
             composable(Screen.History.route) { HistoryScreen() }
-            composable(Screen.Profile.route) {
+            composable(
+                Screen.Profile.route,
+                enterTransition = { fadeIn(animationSpec = tween(300)) },
+                exitTransition = { fadeOut(animationSpec = tween(300)) },
+            ) {
                 ProfileScreen(
                     profileViewModel,
                     authViewModel,
                     onAction= { action ->
                         when (action) {
                             ProfileScreenNavigationAction.GoToAppSelection -> navController.navigate(Screen.AppSelection.route)
+                            ProfileScreenNavigationAction.GoToCategories -> navController.navigate(Screen.Categories.route)
                         }
                     }
                 )
             }
+            composable(Screen.Categories.route) { CategoriesScreen(transactionViewModel)}
             composable(Screen.AppSelection.route) { AppSelectionScreen() }
         }
     }

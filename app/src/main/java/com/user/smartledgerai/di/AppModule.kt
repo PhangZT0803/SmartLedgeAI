@@ -29,7 +29,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideTransactionRepository(db: TransactionDatabase): TransactionRepository =
-        TransactionRepository(db.transactionDao(),db.categoryDao(), db.settingDao(),db.allowedAppDao())
+        TransactionRepository(db.transactionDao(),db.categoryDao(), db.settingDao(),db.allowedAppDao(),db.accountDao())
 
     @Provides
     fun provideAllowedAppDao(db: TransactionDatabase): AllowedAppDAO =
@@ -38,4 +38,8 @@ object AppModule {
     @Provides
     fun provideTransactionDao(db: TransactionDatabase) =
         db.transactionDao()
+
+    @Provides
+    fun provideAccountDao(db: TransactionDatabase) =
+        db.accountDao()
 }

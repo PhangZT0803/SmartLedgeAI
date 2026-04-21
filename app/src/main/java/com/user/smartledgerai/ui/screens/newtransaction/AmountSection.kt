@@ -1,6 +1,8 @@
 package com.user.smartledgerai.ui.screens.newtransaction
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,27 +31,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.user.smartledgerai.ui.theme.AiGradient
 
 @Composable
 fun AmountSection(amount: String, currency: String, onAmountChange: (String) -> Unit, onCurrencyChange: (String) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val typo = MaterialTheme.typography
 
-    Spacer(Modifier.height(8.dp))
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape( bottomStart = 32.dp, bottomEnd = 32.dp),
-        color = colors.primaryContainer.copy(alpha = 0.6f),
-        tonalElevation = 2.dp
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AiGradient)
+            .padding(top=48.dp,bottom = 64.dp),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 24.dp, horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Transaction Amount",
-                style = typo.labelLarge,
+                text = "TRANSACTION AMOUNT",
+                style = typo.labelSmall.copy(letterSpacing = 2.sp),
                 color = colors.onPrimaryContainer.copy(alpha = 0.7f)
             )
             Spacer(Modifier.height(12.dp))

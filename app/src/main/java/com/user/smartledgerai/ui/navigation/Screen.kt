@@ -23,12 +23,11 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 
 sealed class ProfileScreenNavigationAction{
     object GoToAppSelection: ProfileScreenNavigationAction()
+    object GoToCategories: ProfileScreenNavigationAction()
 }
 
 val bottomNavItems = listOf(
     Screen.Dashboard,
     Screen.Verify,
-    Screen.History,
     Screen.Profile,
-    Screen.NewTransaction
 )

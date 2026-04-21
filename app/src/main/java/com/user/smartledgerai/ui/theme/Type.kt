@@ -14,10 +14,10 @@ val Typography = Typography(
     // 1. Display (For massive Hero numbers, e.g., Total Tracked Balance)
     displayLarge = TextStyle(
         fontFamily = defaultFontFamily,
-        fontWeight = FontWeight.Bold, // Bold for numbers
-        fontSize = 40.sp,
-        lineHeight = 48.sp,
-        letterSpacing = (-0.5).sp
+        fontWeight = FontWeight.ExtraBold, // Bold for numbers
+        fontSize = 44.sp,
+        lineHeight = 52.sp,
+        letterSpacing = (-1).sp
     ),
     displayMedium = TextStyle(
         fontFamily = defaultFontFamily,
@@ -31,8 +31,7 @@ val Typography = Typography(
     headlineMedium = TextStyle(
         fontFamily = defaultFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
+        fontSize = 28.sp,
         letterSpacing = 0.sp
     ),
 
@@ -78,9 +77,9 @@ val Typography = Typography(
     ),
     labelSmall = TextStyle(
         fontFamily = defaultFontFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 11.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        letterSpacing = 1.sp
     )
 )

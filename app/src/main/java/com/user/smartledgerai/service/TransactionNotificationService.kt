@@ -5,6 +5,8 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.functions.ktx.functions
+import com.user.smartledgerai.data.Account
+import com.user.smartledgerai.data.AccountDAO
 import com.user.smartledgerai.data.AllowedAppDAO
 import com.user.smartledgerai.data.Transaction
 import com.user.smartledgerai.data.TransactionDAO
@@ -33,12 +35,15 @@ data class NotificationParing(
 interface ServiceEntryPoint{
     fun allowedAppDao(): AllowedAppDAO
     fun transactionDao(): TransactionDAO
+
+    fun AccountDao(): AccountDAO
 }
 class TransactionNotificationService : NotificationListenerService() {
     private val functions = Firebase.functions
     private lateinit var allowedAppDAO: AllowedAppDAO
     private lateinit var transactionDAO: TransactionDAO
 
+    private lateinit var accountDAO: AccountDAO
     override fun onCreate(){
         super.onCreate()
         val entryPoint = EntryPointAccessors.fromApplication(
@@ -47,23 +52,25 @@ class TransactionNotificationService : NotificationListenerService() {
         )
         allowedAppDAO = entryPoint.allowedAppDao()
         transactionDAO = entryPoint.transactionDao()
+        accountDAO = entryPoint.AccountDao()
     }
         override fun onNotificationPosted(sbn: StatusBarNotification?) {
-            Timber.d("PackageReceive: ${sbn?.packageName}")
+            Timber.d("NotificationListenerService Start")
             sbn ?: return //android是用java写的,kotlin会对从java来的都做类似 variable! 意思是可能是null也可能是value也可能是什么都没有,必须要做null处理.
-
-
 
             // Service 里不能直接用 suspend，用 CoroutineScope
             CoroutineScope(Dispatchers.IO).launch {
                 try {
+                    val account = accountDAO.getAccountList()
+                    val packageName = sbn.packageName //发出通知的APP(who)
                     val allowedList = allowedAppDAO.getAllowedAppList()
+                    Timber.d("=== Checking whitelist: $allowedList ===")
                     if (allowedList.none { it.packageName == packageName }) {
                         Timber.d("Skipped: $packageName not in whitelist")
                         return@launch
                     }
+                    Timber.d("=== PASSED whitelist: $packageName, calling Cloud Function ===")
 
-                    val packageName = sbn.packageName //发出通知的APP(who)
                     val extras = sbn.notification?.extras ?: return@launch //extra意思是通知的内容
                     val postTime = sbn.postTime //Unix timestamp
                     val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
@@ -75,7 +82,8 @@ class TransactionNotificationService : NotificationListenerService() {
                         "postTime" to postTime,
                         "text" to text,
                         "bigText" to bigText,
-                        "ticker" to ticker
+                        "ticker" to ticker,
+                        "userAccounts" to account.map { it.accountName }
                     )
 
                     val result = functions
@@ -92,7 +100,7 @@ class TransactionNotificationService : NotificationListenerService() {
                         "TRANSFER" -> TransactionType.TRANSFER
                         else -> TransactionType.SPENDING
                     }
-
+                    val sourceAccount = accountDAO.getAccountByPackage(packageName)//找USER自己创建的account
                     transactionDAO.insertTransaction(
                         Transaction(
                             amount = (data["amount"] as? Number)?.toDouble() ?: 0.0,
@@ -101,7 +109,7 @@ class TransactionNotificationService : NotificationListenerService() {
                             merchant = (data["merchant"] as? String) ?: "Unknown",
                             categoryId = -1,//user choose the category in verifyScreen
                             timestamp = sbn.postTime,
-                            source = packageName,
+                            source = sourceAccount?.accountName ?:packageName,
                             rawData = "$text | $bigText",
                             isVerified = false
                         )

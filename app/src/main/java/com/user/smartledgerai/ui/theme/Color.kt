@@ -1,5 +1,6 @@
 package com.user.smartledgerai.ui.theme
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // ==========================================
@@ -7,7 +8,7 @@ import androidx.compose.ui.graphics.Color
 // ==========================================
 val PrimaryLight = Color(0xFF4F46E5) // Electric Indigo (Brand & Action)
 val OnPrimaryLight = Color(0xFFFFFFFF)
-val PrimaryContainerLight = Color(0xFFE0E7FF) // Soft highlight for AI cards
+val PrimaryContainerLight = Color(0xFFEEF2FF) // Soft highlight for AI cards
 val OnPrimaryContainerLight = Color(0xFF312E81)
 
 val SecondaryLight = Color(0xFF14B8A6) // Mint Teal (Secondary actions/badges)
@@ -64,3 +65,17 @@ val ExpenseColorLight = Color(0xFFEF4444) // Rose Red
 val ExpenseColorDark = Color(0xFFF87171)
 val IncomeColorLight = Color(0xFF10B981)  // Emerald Green
 val IncomeColorDark = Color(0xFF34D399)
+
+// --- 新增：AI 特色渐变 (Gemini Signature) ---
+// 用于仪表盘背景或 AI 识别高光
+val AiGradient = Brush.linearGradient(
+    colors = listOf(Color(0xFF4F46E5), Color(0xFF14B8A6))
+)
+
+// --- 新增：毛玻璃/光感辅助色 ---
+val GlassWhite = Color(0xCCFFFFFF)
+val GlassBlack = Color(0x990F172A)
+
+// --- 语义化颜色强化 ---
+val ExpenseColor = Color(0xFFF43F5E) // 更鲜艳的玫瑰红
+val IncomeColor = Color(0xFF10B981)  // 翠绿色
