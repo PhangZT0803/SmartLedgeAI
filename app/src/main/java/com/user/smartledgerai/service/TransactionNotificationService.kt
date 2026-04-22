@@ -17,18 +17,11 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
-
-data class NotificationParing(
-    val packageName: String,
-    val postTime: String,
-    val text: String,
-    val bigText: String,
-    val ticker: String
-)
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -44,6 +37,8 @@ class TransactionNotificationService : NotificationListenerService() {
     private lateinit var transactionDAO: TransactionDAO
 
     private lateinit var accountDAO: AccountDAO
+    private val job = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.IO + job)
     override fun onCreate(){
         super.onCreate()
         val entryPoint = EntryPointAccessors.fromApplication(
@@ -54,6 +49,7 @@ class TransactionNotificationService : NotificationListenerService() {
         transactionDAO = entryPoint.transactionDao()
         accountDAO = entryPoint.AccountDao()
     }
+
         override fun onNotificationPosted(sbn: StatusBarNotification?) {
             Timber.d("NotificationListenerService Start")
             sbn ?: return //android是用java写的,kotlin会对从java来的都做类似 variable! 意思是可能是null也可能是value也可能是什么都没有,必须要做null处理.
@@ -120,4 +116,8 @@ class TransactionNotificationService : NotificationListenerService() {
                 }
             }
         }
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel() // Service 销毁时取消所有任务
+    }
 }
