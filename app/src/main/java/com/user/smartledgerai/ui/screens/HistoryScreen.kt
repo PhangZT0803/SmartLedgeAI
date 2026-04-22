@@ -16,46 +16,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
-data class HistoryTransaction(
-    val title: String,
-    val amount: String,
-    val time: String,
-    val category: String,
-    val icon: ImageVector,
-    val isIncome: Boolean = false
-)
+import com.user.smartledgerai.data.Transaction
+import com.user.smartledgerai.data.TransactionType
+import com.user.smartledgerai.viewmodel.TransactionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen() {
-    val baseTransactions = remember {
-        listOf(
-            HistoryTransaction("Bubble Tea - CoCo", "- RM 18.90", "Today, 02:30 PM", "Drinks", Icons.Default.LocalCafe),
-            HistoryTransaction("Groceries - AEON", "- RM 150.00", "Today, 10:45 AM", "Food", Icons.Default.LocalGroceryStore),
-            HistoryTransaction("Salary Deposit", "+ RM 4,200.00", "Today, 09:15 AM", "Income", Icons.Default.AccountBalance, true),
-            HistoryTransaction("Starbucks Coffee", "- RM 24.50", "Yesterday", "Drinks", Icons.Default.Coffee),
-            HistoryTransaction("Petrol - Shell", "- RM 100.00", "Yesterday", "Transport", Icons.Default.LocalGasStation),
-            HistoryTransaction("Grab Ride to Campus", "- RM 35.00", "Apr 18", "Transport", Icons.Default.DirectionsCar),
-            HistoryTransaction("McDonald's", "- RM 42.80", "Apr 15", "Food", Icons.Default.Fastfood),
-            HistoryTransaction("Freelance Payment", "+ RM 850.00", "Apr 17", "Income", Icons.Default.Work, true),
-            HistoryTransaction("Shopping - Uniqlo", "- RM 280.00", "Apr 16", "Shopping", Icons.Default.ShoppingBag),
-        )
-    }
+fun HistoryScreen(transactionViewModel: TransactionViewModel) {
+    val transactions by transactionViewModel.transactions.collectAsState()
 
     var selectedFilter by remember { mutableStateOf("All") }
     var sortLatestFirst by remember { mutableStateOf(true) }   // ← New: Toggle state
 
     // Apply filter + sorting
-    val filteredTransactions = remember(selectedFilter, sortLatestFirst, baseTransactions) {
+    val filteredTransaction = remember(selectedFilter, sortLatestFirst, transactions) {
         val filtered = when (selectedFilter) {
-            "Income" -> baseTransactions.filter { it.isIncome }
-            "Expense" -> baseTransactions.filter { !it.isIncome }
-            "Food" -> baseTransactions.filter { it.category == "Food" }
-            "Drinks" -> baseTransactions.filter { it.category == "Drinks" }
-            "Transport" -> baseTransactions.filter { it.category == "Transport" }
-            "Shopping" -> baseTransactions.filter { it.category == "Shopping" }
-            else -> baseTransactions
+            "Income" -> transactions.filter { it.transactionType == TransactionType.INCOME }
+            "Expense" -> transactions.filter { it.transactionType == TransactionType.SPENDING }
+            "Transfer" ->transactions.filter { it.transactionType == TransactionType.TRANSFER }
+            else -> transactions
         }
 
         if (sortLatestFirst) filtered else filtered.reversed()
@@ -91,14 +70,14 @@ fun HistoryScreen() {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(filteredTransactions) { tx ->
+                items(filteredTransaction) { tx ->
                     HistoryTransactionItem(tx)
                 }
 
-                if (filteredTransactions.isEmpty()) {
+                if (filteredTransaction.isEmpty()) {
                     item {
                         Text(
-                            "No transactions found",
+                            "No transaction found",
                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
@@ -137,7 +116,7 @@ fun FilterChipsRow(
 }
 
 @Composable
-fun HistoryTransactionItem(tx: HistoryTransaction) {
+fun HistoryTransactionItem(tx: Transaction) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -150,12 +129,12 @@ fun HistoryTransactionItem(tx: HistoryTransaction) {
             Surface(
                 modifier = Modifier.size(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = if (tx.isIncome) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                color = if (tx.transactionType == TransactionType.INCOME) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Icon(
-                    tx.icon,
+                    Icons.Default.Coffee,
                     contentDescription = null,
-                    tint = if (tx.isIncome) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = if (tx.transactionType == TransactionType.INCOME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -163,15 +142,15 @@ fun HistoryTransactionItem(tx: HistoryTransaction) {
             Spacer(Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(tx.title, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
-                Text(tx.category, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-                Text(tx.time, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text(tx.merchant, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
+                Text( tx.categoryId.toString(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                Text( tx.timestamp.toString(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
 
             Text(
-                text = tx.amount,
+                text = tx.amount.toString(),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = if (tx.isIncome) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+                color = if (tx.transactionType == TransactionType.SPENDING) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
             )
         }
     }

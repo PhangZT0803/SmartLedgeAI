@@ -148,7 +148,7 @@ fun MainNavigation() {
                     false,
                     null)
             }
-            composable(Screen.History.route) { HistoryScreen() }
+            composable(Screen.History.route) { HistoryScreen(transactionViewModel) }
             composable(
                 Screen.Profile.route,
                 enterTransition = { fadeIn(animationSpec = tween(300)) },
