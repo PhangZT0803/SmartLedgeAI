@@ -26,6 +26,31 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
 
     val allCategories: StateFlow<List<Category>> = transactionRepository.getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val categoryMapping: StateFlow<Map<Int, String>> = allCategories.map { categories ->
+        categories.associate { it.id to it.name }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    init {
+        viewModelScope.launch {
+            transactionRepository.getAllCategories().collect { cats ->
+                if (cats.isEmpty()) {
+                    val defaults = listOf(
+                        Category(name = "Food", type = TransactionType.SPENDING, iconName = "restaurant"),
+                        Category(name = "Transport", type = TransactionType.SPENDING, iconName = "directions_car"),
+                        Category(name = "Shopping", type = TransactionType.SPENDING, iconName = "shopping_bag"),
+                        Category(name = "Drinks", type = TransactionType.SPENDING, iconName = "coffee"),
+                        Category(name = "Housing", type = TransactionType.SPENDING, iconName = "home"),
+                        Category(name = "Bills", type = TransactionType.SPENDING, iconName = "receipt"),
+                        Category(name = "Salary", type = TransactionType.INCOME, iconName = "payments"),
+                        Category(name = "Freelance", type = TransactionType.INCOME, iconName = "work")
+                    )
+                    defaults.forEach { transactionRepository.insertCategory(it) }
+                }
+                return@collect
+            }
+        }
+    }
     fun getCategoriesByType(transactionType: TransactionType): Flow<List<Category>> {
         return transactionRepository.getCategoriesByType(transactionType)
     }

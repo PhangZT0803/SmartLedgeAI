@@ -1,55 +1,32 @@
 package com.user.smartledgerai.ui.screens.verify
 
-import android.widget.Toast
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.NavigateNext
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.user.smartledgerai.data.Transaction
-import com.user.smartledgerai.data.TransactionType
-import com.user.smartledgerai.ui.screens.newtransaction.AmountSection
-import com.user.smartledgerai.ui.screens.newtransaction.CategorySection
-import com.user.smartledgerai.ui.screens.newtransaction.CounterPartySection
-import com.user.smartledgerai.ui.screens.newtransaction.DateSection
-import com.user.smartledgerai.ui.screens.newtransaction.NoteSection
 import com.user.smartledgerai.viewmodel.TransactionViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,57 +34,31 @@ fun VerifyScreen(
     pendingTransactions: List<Transaction>,
     transactionViewModel: TransactionViewModel,
     onBack: () -> Unit = {},
-    onSave: () -> Unit = {}
+    onSave: () -> Unit = {},
+    onEditManually: (Transaction) -> Unit = {}
 ) {
-    // ── 当前正在验证第几条 ──
-    var currentIndex by remember { mutableIntStateOf(0) }
-    val currentTransaction = pendingTransactions.getOrNull(currentIndex)
+    val currentTransaction = pendingTransactions.firstOrNull()
+    val colors = MaterialTheme.colorScheme
+    val allCategories by transactionViewModel.allCategories.collectAsState()
 
     if (currentTransaction == null) {
-        EmptyVerificationScreen()
+        EmptyVerificationScreen(onBack)
         return
     }
 
-    // ── 从 Transaction entity 读取初始值，用户可修改 ──
-    var amount by remember(currentIndex) { mutableStateOf(currentTransaction.amount.toString()) }
-    var currency by remember(currentIndex) { mutableStateOf(currentTransaction.currency) }
-    var selectedType by remember(currentIndex) { mutableStateOf(currentTransaction.transactionType) }
-    var toField by remember(currentIndex) { mutableStateOf(currentTransaction.merchant) }
-    var fromAccount by remember(currentIndex) { mutableStateOf(currentTransaction.source) }
-    var selectedCategoryId by remember(currentIndex) { mutableIntStateOf(currentTransaction.categoryId) }
-    var note by remember(currentIndex) { mutableStateOf(currentTransaction.description ?: "") }
-    var showRawData by remember(currentIndex) { mutableStateOf(false) }
+    // Look up real category name from DB
+    val categoryLabel = allCategories.find { it.id == currentTransaction.categoryId }?.name ?: "Others"
+    val categoryIcon = getCategoryIcon(categoryLabel)
 
-    val categories by transactionViewModel.getCategoriesByType(selectedType)
-        .collectAsState(initial = emptyList())
-
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = currentTransaction.timestamp
-    )
-    var showDatePicker by remember(currentIndex) { mutableStateOf(false) }
-    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    val displayDate = dateFormatter.format(
-        Date(datePickerState.selectedDateMillis ?: currentTransaction.timestamp)
-    )
-    val context = LocalContext.current
     Scaffold(
+        containerColor = colors.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Verify Transaction", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            text = "${currentIndex + 1} / ${pendingTransactions.size} pending",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
+            CenterAlignedTopAppBar(
+                windowInsets = WindowInsets.statusBars,
+                title = { Text("Verification", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = colors.onBackground) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = colors.onBackground) } },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = colors.background)
             )
         }
     ) { innerPadding ->
@@ -117,152 +68,127 @@ fun VerifyScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Spacer(Modifier.height(8.dp))
-
-            // ── AI 来源标识（只有 rawData 不为空时才显示）──
-            if (currentTransaction.rawData != null) {
-                AITrustBadge(source = currentTransaction.source)
-                Spacer(Modifier.height(16.dp))
+            // Section Header
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Verify Record", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.ExtraBold), color = colors.secondary)
+                Text("Confirm the AI's interpretation of your recent spend.", style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
             }
 
-            // ── 复用 newtransaction 的 Section 组件 ──
-            AmountSection(
-                amount = amount,
-                currency = currency,
-                onAmountChange = { amount = it },
-                onCurrencyChange = { currency = it }
-            )
-
-            // Verify 不显示 TypeSection — AI 已确定类型，只读展示
-            TypeIndicator(type = selectedType)
-
-            CounterPartySection(
-                selectedType = selectedType,
-                toField = toField,
-                fromField = fromAccount,
-                onToFieldChange = { toField = it },
-                onFromFieldChange = { fromAccount = it }
-            )
-
-            if (selectedType != TransactionType.TRANSFER) {
-                CategorySection(categories, selectedCategoryId, onCategoryChange = { selectedCategoryId = it })
-            }
-
-            DateSection(
-                displayDate = displayDate,
-                showDatePicker = showDatePicker,
-                datePickerState = datePickerState,
-                onShowDatePicker = { showDatePicker = true },
-                onDismissDatePicker = { showDatePicker = false }
-            )
-
-            NoteSection(note = note, onNoteChange = { note = it })
-
-            // ── 原始通知数据 ──
-            if (currentTransaction.rawData != null) {
-                RawMetadataSection(
-                    rawData = currentTransaction.rawData,
-                    expanded = showRawData,
-                    onToggle = { showRawData = !showRawData }
-                )
-                Spacer(Modifier.height(24.dp))
-            }
-
-            // ── 操作按钮 ──
-            Button(
-                onClick = {
-                    if(selectedCategoryId == -1 && selectedType != TransactionType.TRANSFER){
-                        Toast.makeText(context,"Please select a category",Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    val parsedAmount = amount.toDoubleOrNull() ?: return@Button
-                    transactionViewModel.verifyTransaction(
-                        original = currentTransaction,
-                        amount = parsedAmount,
-                        currency = currency,
-                        merchant = toField,
-                        source = fromAccount,
-                        categoryId = selectedCategoryId,
-                        timestamp = datePickerState.selectedDateMillis ?: currentTransaction.timestamp,
-                        description = note.ifBlank { null }
-                    )
-                    if (currentIndex < pendingTransactions.size - 1) {
-                        currentIndex++
-                    } else {
-                        onSave() //处理完回去主页面
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    if (currentIndex < pendingTransactions.size - 1) "Confirm & Next"
-                    else "Confirm & Done",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-
-            // 跳过按钮
-            if (pendingTransactions.size > 1 && currentIndex < pendingTransactions.size - 1) {
-                OutlinedButton(
-                    onClick = { currentIndex++ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    shape = RoundedCornerShape(16.dp)
+            // Raw Source Card
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.Terminal, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                    Text("RAW SOURCE DATA", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp), color = colors.onSurfaceVariant)
+                }
+                Box(
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                        .background(colors.surfaceVariant)
+                        .border(1.dp, colors.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                        .padding(16.dp)
                 ) {
-                    Text("Skip")
-                    Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Default.NavigateNext, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text(currentTransaction.rawData ?: "No raw data available", style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace), color = colors.onSurfaceVariant)
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+                Surface(
+                    color = colors.surface,
+                    shape = RoundedCornerShape(24.dp),
+                    tonalElevation = 4.dp
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier.size(72.dp).background(colors.secondaryContainer, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(categoryIcon, contentDescription = null, tint = colors.secondary, modifier = Modifier.size(36.dp))
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+                        Text(currentTransaction.merchant, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold), color = colors.onSurface, textAlign = TextAlign.Center)
+                        Text(categoryLabel.uppercase(), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp), color = colors.secondary, modifier = Modifier.padding(top = 4.dp))
+
+                        Spacer(Modifier.height(24.dp))
+                        Box(modifier = Modifier.width(48.dp).height(3.dp).background(colors.outlineVariant.copy(alpha = 0.3f), CircleShape))
+                        Spacer(Modifier.height(24.dp))
+
+                        Text("DETECTED AMOUNT", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp), color = colors.onSurfaceVariant)
+                        Text("RM ${String.format("%,.2f", currentTransaction.amount)}", style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold), color = colors.secondary)
+                    }
+                }
+
+                // Bottom accent bar
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(5.dp)
+                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                        .background(Brush.horizontalGradient(listOf(colors.primary, colors.secondary, colors.primary)))
+                )
+
+            // Action Buttons
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 32.dp)) {
+                Button(
+                    onClick = {
+                        transactionViewModel.verifyTransaction(
+                            original = currentTransaction,
+                            amount = currentTransaction.amount,
+                            currency = currentTransaction.currency,
+                            merchant = currentTransaction.merchant,
+                            source = currentTransaction.source,
+                            categoryId = currentTransaction.categoryId,
+                            timestamp = currentTransaction.timestamp,
+                            description = currentTransaction.description
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.secondary)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Confirm & Save", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold), color = colors.onSecondary)
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp), tint = colors.onSecondary)
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = { onEditManually(currentTransaction) },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, colors.outlineVariant)
+                ) {
+                    Text("Edit Manually", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = colors.onSurface)
+                }
+            }
         }
     }
 }
 
-/** 只读的类型指示，不可切换 */
-@Composable
-private fun TypeIndicator(type: TransactionType) {
-    val label = when (type) {
-        TransactionType.SPENDING -> "Spending"
-        TransactionType.INCOME -> "Income"
-        TransactionType.TRANSFER -> "Transfer"
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Type",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp)
-        )
-        Spacer(Modifier.width(12.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.primary
-        )
+private fun getCategoryIcon(category: String): ImageVector {
+    return when (category.lowercase()) {
+        "food" -> Icons.Default.Restaurant
+        "transport" -> Icons.Default.DirectionsCar
+        "shopping" -> Icons.Default.ShoppingBag
+        "drinks" -> Icons.Default.LocalCafe
+        "housing" -> Icons.Default.Home
+        "salary" -> Icons.Default.AccountBalance
+        "bills" -> Icons.Default.Receipt
+        else -> Icons.Default.Payments
     }
 }
 
 @Composable
-private fun EmptyVerificationScreen() {
-    androidx.compose.foundation.layout.Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("No pending AI records.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun EmptyVerificationScreen(onBack: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Box(modifier = Modifier.fillMaxSize().background(colors.background), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text("All caught up!", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = colors.onBackground)
+            Text("No pending AI records.", color = colors.onSurfaceVariant)
+            Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = colors.secondary)) {
+                Text("Back to Dashboard", color = colors.onSecondary)
+            }
+        }
     }
 }

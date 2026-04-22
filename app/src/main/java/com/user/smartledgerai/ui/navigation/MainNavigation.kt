@@ -7,13 +7,25 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -23,6 +35,7 @@ import com.user.smartledgerai.ui.screens.AppSelectionScreen
 import com.user.smartledgerai.ui.screens.CategoriesScreen
 import com.user.smartledgerai.ui.screens.DashboardScreen
 import com.user.smartledgerai.ui.screens.HistoryScreen
+import com.user.smartledgerai.ui.screens.InsightsScreen
 import com.user.smartledgerai.ui.screens.newtransaction.NewTransactionScreen
 import com.user.smartledgerai.ui.screens.OnBoardingScreen
 import com.user.smartledgerai.ui.screens.ProfileScreen
@@ -40,14 +53,21 @@ fun MainNavigation() {
 
     val user by authViewModel.user.collectAsState()
     val transactions = transactionViewModel.transactions.collectAsState()
-    //filter 返回的是一个list
+    // filter returns a list
     val transactionsToEdit: List<Transaction> = transactions.value.filter{
         !it.isVerified
         }
 
+    val hasUnverified = transactionsToEdit.isNotEmpty()
+    val unverifiedCount = transactionsToEdit.size
+
+    var selectedTransactionForEdit by remember { mutableStateOf<Transaction?>(null) }
+
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             FloatingActionButton(onClick = {
+                selectedTransactionForEdit = null // Reset for new transaction
                 navController.navigate(Screen.NewTransaction.route)},
                 containerColor = MaterialTheme.colorScheme.primary,
                 shape = CircleShape
@@ -56,57 +76,82 @@ fun MainNavigation() {
             }
         },
         bottomBar = {
-            if(user != null){
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-                bottomNavItems.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = null) },
-                        label = { Text(screen.label) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                tonalElevation = 8.dp,
+                shadowElevation = 16.dp
+            ) {
+                NavigationBar(
+                    containerColor = Color.Transparent,
+                    modifier = Modifier.height(64.dp),
+                    windowInsets = WindowInsets(0, 0, 0, 0)
+                ) {
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentDestination = navBackStackEntry?.destination
+                    bottomNavItems.forEach { screen ->
+                        NavigationBarItem(
+                            icon = {
+                                if (screen.route == Screen.Verify.route && hasUnverified) {
+                                    // Numbered badge on Verify icon
+                                    BadgedBox(badge = {
+                                        Badge(
+                                            containerColor = Color(0xFFEF4444)
+                                        ) {
+                                            Text(
+                                                "$unverifiedCount",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                                                color = Color.White
+                                            )
+                                        }
+                                    }) {
+                                        Icon(screen.icon, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    }
+                                } else {
+                                    Icon(screen.icon, contentDescription = null, modifier = Modifier.size(20.dp))
                                 }
-                                launchSingleTop = true
-                                restoreState = true
+                            },
+                            label = { Text(screen.label, style = MaterialTheme.typography.labelSmall) },
+                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
-        }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route,
+            startDestination = Screen.Dashboard.route,
             modifier = Modifier.padding(innerPadding),
-
-                    // 1. 进入新页面时：从右向左滑入 + 淡入
-                    enterTransition = {
+            enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> fullWidth },
                     animationSpec = tween(300)
                 ) + fadeIn(animationSpec = tween(300))
             },
-            // 2. 离开当前页面时：向左轻微滑动推出 + 淡出
             exitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> -fullWidth / 3 },
                     animationSpec = tween(300)
                 ) + fadeOut(animationSpec = tween(300))
             },
-            // 3. 按返回键回到上个页面时：从左向右滑入 + 淡入
             popEnterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> -fullWidth / 3 },
                     animationSpec = tween(300)
                 ) + fadeIn(animationSpec = tween(300))
             },
-            // 4. 按返回键退出当前页面时：向右滑出 + 淡出
             popExitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> fullWidth },
@@ -124,31 +169,48 @@ fun MainNavigation() {
             ) {
                 DashboardScreen(
                     transactionViewModel,
-                    onAction={
-                        navController.navigate(Screen.History.route)
-                    }
+                    onAction = { navController.navigate(Screen.History.route) },
+                    onInsights = { navController.navigate(Screen.Insights.route) }
                 )
             }
             composable(Screen.Verify.route) {
                 VerifyScreen(
                     transactionsToEdit,
                     transactionViewModel,
+                    onBack = { navController.popBackStack() },
+                    onEditManually = { transaction ->
+                        selectedTransactionForEdit = transaction
+                        navController.navigate(Screen.NewTransaction.route)
+                    }
+                )
+            }
+            composable(Screen.Insights.route) {
+                InsightsScreen(
+                    transactionViewModel,
                     onBack = { navController.popBackStack() }
-                    )
+                )
             }
             composable(
                 Screen.NewTransaction.route,
-                // 从底部弹出
                 enterTransition = { slideInVertically(initialOffsetY = { it }) + fadeIn() },
-                // 向底部收起
                 popExitTransition = { slideOutVertically(targetOffsetY = { it }) + fadeOut() }
             ) {
                 NewTransactionScreen(
                     transactionViewModel,
-                    false,
-                    null)
+                    isEditMode = selectedTransactionForEdit != null,
+                    transactionToEdit = selectedTransactionForEdit,
+                    onBack = { navController.popBackStack() }
+                )
             }
-            composable(Screen.History.route) { HistoryScreen(transactionViewModel) }
+            composable(Screen.History.route) { 
+                HistoryScreen(
+                    transactionViewModel,
+                    onEditTransaction = { transaction ->
+                        selectedTransactionForEdit = transaction
+                        navController.navigate(Screen.NewTransaction.route)
+                    }
+                ) 
+            }
             composable(
                 Screen.Profile.route,
                 enterTransition = { fadeIn(animationSpec = tween(300)) },
@@ -169,12 +231,12 @@ fun MainNavigation() {
             composable(Screen.AppSelection.route) { AppSelectionScreen() }
         }
     }
-    //总结先进来一定是Login->(检查)->清除Login->进入Dashboard
+
     LaunchedEffect(user) {
         if (user != null) {
-                navController.navigate(Screen.Dashboard.route) {
-                    popUpTo(Screen.Login.route) { inclusive = true }  // 清掉登录页，按返回不会回到登录
-                }
+            navController.navigate(Screen.Dashboard.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
             }
         }
     }
+}

@@ -32,7 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.user.smartledgerai.ui.theme.AiGradient
+import com.user.smartledgerai.ui.theme.BrandingGradient
 
 @Composable
 fun AmountSection(amount: String, currency: String, onAmountChange: (String) -> Unit, onCurrencyChange: (String) -> Unit) {
@@ -42,7 +42,7 @@ fun AmountSection(amount: String, currency: String, onAmountChange: (String) -> 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AiGradient)
+            .background(BrandingGradient)
             .padding(top=48.dp,bottom = 64.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -67,7 +67,7 @@ fun AmountSection(amount: String, currency: String, onAmountChange: (String) -> 
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { newValue ->
-                        // 只允许数字和一个小数点
+                        // Allow only numbers and a single decimal point
                         if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
                             onAmountChange(newValue)
                         }

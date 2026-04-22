@@ -16,6 +16,6 @@ data class Transaction(
     val categoryId: Int,
     val description: String? = null,
     val source: String, //To Do Account from
-    val rawData: String? = null, // 通知/邮件原文，用于 VerifyScreen 展示和 AI debug
+    val rawData: String? = null, // Original notification/email content for verification
     var isVerified: Boolean = false,
 )

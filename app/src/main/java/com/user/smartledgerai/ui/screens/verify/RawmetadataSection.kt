@@ -17,8 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * 可展开的原始通知/邮件内容。
- * rawData 来自 Transaction.rawData — 通知原文或 Gemini 的原始输入。
+ * Expandable section to display raw source data for verification.
  */
 @Composable
 fun RawMetadataSection(

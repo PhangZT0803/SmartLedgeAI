@@ -40,7 +40,8 @@ fun ProfileScreen(
     val colors = MaterialTheme.colorScheme
 
     Scaffold(
-        containerColor = colors.background // 使用 Slate 50 背景
+        containerColor = colors.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -48,9 +49,9 @@ fun ProfileScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 20.dp)
         ) {
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.windowInsetsPadding(WindowInsets.statusBars))
 
-            // 1. 用户信息头部 (Hero Section)
+            // User Profile Header
             ProfileHeader(
                 displayName = user?.displayName ?: "User",
                 email = user?.email ?: "No email linked",
@@ -59,7 +60,7 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // 2. 功能分组卡片
+            // Settings Sections
             Text(
                 text = "GENERAL SETTINGS",
                 style = MaterialTheme.typography.labelSmall,
@@ -109,7 +110,7 @@ fun ProfileScreen(
                 ProfileMenuItem(
                     icon = Icons.Default.Logout,
                     title = "Sign Out",
-                    titleColor = MaterialTheme.colorScheme.error, // 使用语义色
+                    titleColor = MaterialTheme.colorScheme.error,
                     onClick = { authViewModel.signOut() },
                     showChevron = false
                 )
@@ -126,7 +127,7 @@ private fun ProfileHeader(displayName: String, email: String, photoUrl: String?)
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 头像容器：增加渐变边框效果
+        // Profile image container with gradient border
         Box(
             modifier = Modifier
                 .size(80.dp)
@@ -134,7 +135,7 @@ private fun ProfileHeader(displayName: String, email: String, photoUrl: String?)
                     brush = Brush.linearGradient(listOf(colors.primary, colors.secondary)),
                     shape = CircleShape
                 )
-                .padding(3.dp) // 边框厚度
+                .padding(3.dp)
         ) {
             AsyncImage(
                 model = photoUrl,
@@ -180,7 +181,7 @@ private fun ProfileMenuItem(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 图标背景
+        // Icon background
         Box(
             modifier = Modifier
                 .size(40.dp)

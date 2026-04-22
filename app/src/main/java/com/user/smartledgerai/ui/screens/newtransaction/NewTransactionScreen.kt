@@ -131,21 +131,31 @@ fun NewTransactionScreen(
                         Toast.makeText(context, "Please select a category", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
+                    val finalTimestamp = datePickerState.selectedDateMillis?.let { millis ->
+                        val current = java.util.Calendar.getInstance()
+                        val selected = java.util.Calendar.getInstance().apply { timeInMillis = millis }
+                        selected.set(java.util.Calendar.HOUR_OF_DAY, current.get(java.util.Calendar.HOUR_OF_DAY))
+                        selected.set(java.util.Calendar.MINUTE, current.get(java.util.Calendar.MINUTE))
+                        selected.set(java.util.Calendar.SECOND, current.get(java.util.Calendar.SECOND))
+                        selected.timeInMillis
+                    } ?: System.currentTimeMillis()
+
                     transactionViewModel.insertTransaction(
                         Transaction(
+                            transactionId = transactionToEdit?.transactionId ?: 0,
                             amount = parsedAmount,
                             currency = currency,
                             transactionType = selectedType,
                             merchant = toField,
                             source = fromAccount,
                             categoryId = selectedCategoryId,
-                            timestamp = datePickerState.selectedDateMillis ?: System.currentTimeMillis(),
+                            timestamp = finalTimestamp,
                             description = note.ifBlank { null },
                             isVerified = true
                         )
                     )
                     Toast.makeText(context, "Transaction saved!", Toast.LENGTH_SHORT).show()
-                    //清空
+                    // Reset fields
                     amount = ""
                     toField = ""
                     fromAccount = ""

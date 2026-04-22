@@ -95,7 +95,7 @@ fun AppSelectionContent(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(Modifier.height(12.dp))
-                        // 引用美化后的搜索栏
+                        // Search Bar
                         SearchBar(searchText, onQueryChange)
                     }
                 }
@@ -117,7 +117,7 @@ fun AppSelectionContent(
                         onToggle = { onToggleApp(appInfo.packageName, appInfo.appName) }
                     )
 
-                    // 更加精致的分割线设计
+                    // Refined divider design
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 72.dp),
                         thickness = 0.5.dp,

@@ -1,117 +1,205 @@
 package com.user.smartledgerai.ui.screens
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.user.smartledgerai.data.Transaction
-import com.user.smartledgerai.ui.theme.AiGradient
+import com.user.smartledgerai.data.TransactionType
+import com.user.smartledgerai.ui.theme.ExpenseColorDark
+import com.user.smartledgerai.ui.theme.ExpenseColorLight
+import com.user.smartledgerai.ui.theme.IncomeColorDark
+import com.user.smartledgerai.ui.theme.IncomeColorLight
 import com.user.smartledgerai.viewmodel.TransactionViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+
+data class CategoryData(val name: String, val percentage: Float, val color: Color, val icon: ImageVector)
+
+// Donut chart palette
+private val ChartColors = listOf(
+    Color(0xFF14B8A6), Color(0xFF0891B2), Color(0xFFF59E0B),
+    Color(0xFF818CF8), Color(0xFFF43F5E), Color(0xFF10B981)
+)
+
+private val CategoryIcons = mapOf(
+    "food" to Icons.Default.Restaurant,
+    "transport" to Icons.Default.DirectionsCar,
+    "shopping" to Icons.Default.ShoppingBag,
+    "drinks" to Icons.Default.LocalCafe,
+    "housing" to Icons.Default.Home,
+    "salary" to Icons.Default.AccountBalance,
+    "bills" to Icons.Default.Receipt,
+    "freelance" to Icons.Default.Work
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(transactionViewModel: TransactionViewModel,onAction:()->Unit){
+fun DashboardScreen(
+    transactionViewModel: TransactionViewModel,
+    onAction: () -> Unit = {},
+    onInsights: () -> Unit = {}
+) {
     val transactions by transactionViewModel.transactions.collectAsState()
-    val verifiedTransactions = transactions.filter { it.isVerified }
-
     val colors = MaterialTheme.colorScheme
-    val typo = MaterialTheme.typography
+    val isDark = isSystemInDarkTheme()
+    val expenseColor = if (isDark) ExpenseColorDark else ExpenseColorLight
+    val incomeColor = if (isDark) IncomeColorDark else IncomeColorLight
 
-    // TODO: 之后从 ViewModel 拿月度统计
-    val totalBalance = verifiedTransactions.sumOf { tx ->
-        when (tx.transactionType) {
-            com.user.smartledgerai.data.TransactionType.INCOME -> tx.amount
-            com.user.smartledgerai.data.TransactionType.SPENDING -> -tx.amount
-            com.user.smartledgerai.data.TransactionType.TRANSFER -> 0.0
+    val verifiedTransactions = transactions.filter { it.isVerified }
+    val categoryMapping by transactionViewModel.categoryMapping.collectAsState()
+
+    val totalBalance = verifiedTransactions.sumOf { if (it.transactionType == TransactionType.INCOME) it.amount else -it.amount }
+    val income = verifiedTransactions.filter { it.transactionType == TransactionType.INCOME }.sumOf { it.amount }
+    val spending = verifiedTransactions.filter { it.transactionType == TransactionType.SPENDING }.sumOf { it.amount }
+
+    // Dynamic category breakdown from real categoryId
+    val categoryBreakdown = remember(verifiedTransactions, categoryMapping) {
+        val spendingTransactions = verifiedTransactions.filter { it.transactionType == TransactionType.SPENDING }
+        val totalSpend = spendingTransactions.sumOf { it.amount }
+        if (totalSpend == 0.0) {
+            listOf(CategoryData("No Data", 100f, Color.Gray, Icons.Default.Payments))
+        } else {
+            val groups = mutableMapOf<String, Double>()
+            spendingTransactions.forEach { transaction ->
+                val catName = categoryMapping[transaction.categoryId] ?: "Others"
+                groups[catName] = (groups[catName] ?: 0.0) + transaction.amount
+            }
+            groups.entries.mapIndexed { index, (name, amount) ->
+                val pct = ((amount / totalSpend) * 100).toFloat()
+                val icon = CategoryIcons[name.lowercase()] ?: Icons.Default.Payments
+                val color = ChartColors[index % ChartColors.size]
+                CategoryData(name, pct, color, icon)
+            }.sortedByDescending { it.percentage }
         }
     }
 
     Scaffold(
+        containerColor = colors.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        "SmartLedger AI",
-                        style = typo.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                        color = colors.primary
-                    )
-                }
+                windowInsets = WindowInsets.statusBars,
+                title = { Text("SmartLedger AI", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold), color = colors.onBackground) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background)
             )
         }
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp),
+            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
-            contentPadding = PaddingValues(bottom = 32.dp)
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) }
+            item { BalanceHeader(colors, totalBalance) }
 
-            // Balance
-            item { ImmersiveBalanceCard(totalBalance = totalBalance) }
-
-            // Quick Stats
-            item { QuickStatsRow(verifiedTransactions = verifiedTransactions) }
-
-            // Recent Transactions
             item {
-                // 1. 用一个 Row 处理头部，让文字和按钮左右分布
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween, // 左右对齐
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Recent Transactions",
-                        style = typo.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-
-                    TextButton(onClick = { onAction() }) {
-                        Text("View All")
-                        Spacer(Modifier.width(4.dp))
-                        Icon(
-                            Icons.Default.ArrowOutward,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    MonthlyStatCard(Modifier.weight(1f), "Monthly Income", income, colors.surfaceVariant, colors.primary, Icons.Default.AccountBalanceWallet)
+                    MonthlyStatCard(Modifier.weight(1f), "Monthly Spend", spending, colors.primary, colors.onPrimary, Icons.Default.TrendingDown)
                 }
             }
 
-// 2. 列表项依然直接放在 LazyColumn 下，保持纵向排列
+            item { AiGoalBanner(colors, onInsights) }
+
+            item { SpendingCategorySection(colors, categoryBreakdown, spending) }
+
+            item { SectionHeader(colors, "Recent Transactions") { onAction() } }
+
             if (verifiedTransactions.isEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("No transactions yet", color = colors.onSurfaceVariant)
+                item { Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) { Text("No verified transactions yet", color = colors.onSurfaceVariant) } }
+            } else {
+                items(verifiedTransactions.take(5)) { transaction ->
+                    VerifiedTxCard(colors, transaction, categoryMapping, incomeColor, expenseColor)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BalanceHeader(colors: ColorScheme, balance: Double) {
+    Column {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("TOTAL BALANCE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp), color = colors.onSurfaceVariant)
+            Surface(color = colors.secondaryContainer, shape = CircleShape) {
+                Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Box(modifier = Modifier.size(6.dp).background(colors.secondary, CircleShape))
+                    Text("AI SYNCING...", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = colors.secondary)
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text("RM", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = colors.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp, end = 4.dp))
+            Text(String.format("%,.2f", balance), style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Black, fontSize = 42.sp), color = colors.onBackground)
+        }
+    }
+}
+
+@Composable
+private fun MonthlyStatCard(modifier: Modifier, label: String, amount: Double, containerColor: Color, contentColor: Color, icon: ImageVector) {
+    Surface(modifier = modifier, color = containerColor, shape = RoundedCornerShape(24.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Icon(icon, contentDescription = null, tint = contentColor.copy(alpha = 0.7f), modifier = Modifier.size(24.dp))
+            Spacer(Modifier.height(16.dp))
+            Text(label, style = MaterialTheme.typography.labelSmall, color = contentColor.copy(alpha = 0.6f))
+            Text("RM ${String.format("%,.2f", amount)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = contentColor)
+        }
+    }
+}
+
+@Composable
+private fun AiGoalBanner(colors: ColorScheme, onClick: () -> Unit) {
+    Surface(color = colors.errorContainer, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(Icons.Default.Warning, contentDescription = null, tint = colors.error, modifier = Modifier.size(32.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text("AI GOAL PREDICTION", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = colors.onErrorContainer.copy(alpha = 0.7f))
+                Text("Careful! You're RM 984 over your planned budget today.", style = MaterialTheme.typography.bodySmall, color = colors.onErrorContainer)
+            }
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colors.onErrorContainer)
+        }
+    }
+}
+
+@Composable
+private fun SpendingCategorySection(colors: ColorScheme, categories: List<CategoryData>, totalSpend: Double) {
+    Surface(color = colors.surface, shape = RoundedCornerShape(24.dp), tonalElevation = 2.dp) {
+        Column(modifier = Modifier.padding(24.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = colors.secondary, modifier = Modifier.size(20.dp))
+                Text("Spending by Category", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = colors.onSurface)
+            }
+            Spacer(Modifier.height(24.dp))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(140.dp)) {
+                    DynamicDonutChart(categories)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("TOTAL SPEND", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 8.sp), color = colors.onSurfaceVariant)
+                        Text(String.format("%,.0f", totalSpend), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold), color = colors.onSurface)
                     }
                 }
-            } else {
-                items(verifiedTransactions.take(10)) { tx ->
-                    TransactionRow(tx) // 每一条记录会自动换行显示
+                Spacer(Modifier.width(24.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    categories.forEach { LegendItem(colors, it) }
                 }
             }
         }
@@ -119,192 +207,59 @@ fun DashboardScreen(transactionViewModel: TransactionViewModel,onAction:()->Unit
 }
 
 @Composable
-private fun ImmersiveBalanceCard(totalBalance: Double) {
-    val colors = MaterialTheme.colorScheme
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp)
-            .shadow(
-                elevation = 16.dp,
-                shape = RoundedCornerShape(28.dp),
-                spotColor = colors.primary,
-                ambientColor = colors.secondary
-            ),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AiGradient) // 使用你定义的 AI 渐变色
-                .padding(24.dp)
-        ) {
-            // 背景装饰：半透明的大图标
-            Icon(
-                Icons.Default.AutoAwesome,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(160.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = 24.dp, y = 24.dp)
-                    .graphicsLayer(alpha = 0.1f, rotationZ = -15f),
-                tint = Color.White
-            )
-
-            Column {
-                Text(
-                    text = "Total Balance",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color.White.copy(alpha = 0.7f)
-                )
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = "RM ",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
-                    Text(
-                        text = String.format("%,.2f", totalBalance),
-                        style = MaterialTheme.typography.displayLarge,
-                        color = Color.White
-                    )
-                }
-            }
+private fun DynamicDonutChart(categories: List<CategoryData>) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val strokeWidth = 24.dp.toPx()
+        val totalPct = categories.sumOf { it.percentage.toDouble() }.toFloat()
+        var startAngle = -90f
+        categories.forEach { cat ->
+            val sweep = (cat.percentage / totalPct) * 360f
+            drawArc(color = cat.color, startAngle = startAngle, sweepAngle = sweep, useCenter = false, style = Stroke(width = strokeWidth, cap = StrokeCap.Round))
+            startAngle += sweep
         }
     }
 }
 
 @Composable
-private fun QuickStatsRow(verifiedTransactions: List<Transaction>) {
-    val income = verifiedTransactions
-        .filter { it.transactionType == com.user.smartledgerai.data.TransactionType.INCOME }
-        .sumOf { it.amount }
-    val spending = verifiedTransactions
-        .filter { it.transactionType == com.user.smartledgerai.data.TransactionType.SPENDING }
-        .sumOf { it.amount }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Income Card
-        StatCard(
-            modifier = Modifier.weight(1f),
-            label = "Income",
-            amount = income,
-            icon = Icons.Default.AccountBalanceWallet,
-            isHighlight = false
-        )
-        // Spending Card
-        StatCard(
-            modifier = Modifier.weight(1f),
-            label = "Spending",
-            amount = spending,
-            icon = Icons.Default.TrendingDown,
-            isHighlight = true
-        )
-    }
-}
-
-@Composable
-private fun StatCard(
-    modifier: Modifier,
-    label: String,
-    amount: Double,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    isHighlight: Boolean
-) {
-    val colors = MaterialTheme.colorScheme
-    val containerColor = if (isHighlight) colors.primary else colors.surfaceVariant
-    val contentColor = if (isHighlight) colors.onPrimary else colors.onSurface
-
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(24.dp))
-            Column {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = contentColor.copy(alpha = 0.7f)
-                )
-                Text(
-                    text = "RM ${String.format("%,.2f", amount)}",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = contentColor
-                )
-            }
+private fun LegendItem(colors: ColorScheme, category: CategoryData) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(modifier = Modifier.size(36.dp).background(category.color.copy(alpha = 0.2f), RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
+            Icon(category.icon, contentDescription = null, tint = category.color, modifier = Modifier.size(18.dp))
+        }
+        Column {
+            Text(category.name.uppercase(), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp), color = colors.onSurfaceVariant)
+            Text("${category.percentage.toInt()}%", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold), color = colors.onSurface)
         }
     }
 }
 
 @Composable
-private fun TransactionRow(tx: Transaction) {
-    val colors = MaterialTheme.colorScheme
-    val isSpending = tx.transactionType == com.user.smartledgerai.data.TransactionType.SPENDING
-    val dateStr = remember(tx.timestamp) {
-        SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).format(Date(tx.timestamp))
+private fun SectionHeader(colors: ColorScheme, title: String, onSeeAll: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = colors.onBackground)
+        TextButton(onClick = onSeeAll) { Text("See All", color = colors.secondary, style = MaterialTheme.typography.labelLarge) }
     }
+}
 
-    Surface(
-        color = colors.surface,
-        shape = RoundedCornerShape(20.dp),
-        tonalElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Icon
-            Surface(
-                modifier = Modifier.size(48.dp),
-                color = if(isSpending) colors.errorContainer else colors.primaryContainer.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(
-                    if (isSpending) Icons.Default.ArrowOutward else Icons.Default.ArrowDownward,
-                    contentDescription = null,
-                    tint = if(isSpending) colors.error else colors.primary,
-                    modifier = Modifier.padding(12.dp)
-                )
+@Composable
+private fun VerifiedTxCard(colors: ColorScheme, transaction: Transaction, categoryMapping: Map<Int, String>, incomeColor: Color, expenseColor: Color) {
+    val isIncome = transaction.transactionType == TransactionType.INCOME
+    val catName = categoryMapping[transaction.categoryId] ?: "Others"
+
+    Surface(color = colors.surface, shape = RoundedCornerShape(24.dp), tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(48.dp).background(colors.surfaceVariant, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(CategoryIcons[catName.lowercase()] ?: Icons.Default.ReceiptLong, contentDescription = null, tint = colors.onSurfaceVariant)
             }
-
             Spacer(Modifier.width(16.dp))
-
-            // Merchant + date
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = tx.merchant,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = dateStr,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.onSurfaceVariant.copy(alpha = 0.8f)
-                )
+                Text(transaction.merchant, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), color = colors.onSurface)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Default.Verified, contentDescription = null, tint = colors.secondary, modifier = Modifier.size(14.dp))
+                    Text(catName, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = colors.secondary)
+                }
             }
-
-            // Amount
-            Text(
-                text = "${if (isSpending) "-" else "+"} RM ${String.format("%,.2f", tx.amount)}",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = if (isSpending)
-                    com.user.smartledgerai.ui.theme.ExpenseColorLight
-                else
-                    com.user.smartledgerai.ui.theme.IncomeColorLight
-            )
+            Text("${if (isIncome) "+ " else "- "}RM ${String.format("%,.2f", transaction.amount)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = if (isIncome) incomeColor else expenseColor)
         }
     }
 }

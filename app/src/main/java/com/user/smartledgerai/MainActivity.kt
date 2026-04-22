@@ -25,9 +25,7 @@ import dagger.hilt.android.AndroidEntryPoint
         enableEdgeToEdge()
         setContent {
             SmartLedgerAITheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainNavigation()
-                }
+                MainNavigation()
             }
         }
     }

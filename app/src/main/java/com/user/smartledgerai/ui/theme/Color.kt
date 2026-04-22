@@ -66,16 +66,15 @@ val ExpenseColorDark = Color(0xFFF87171)
 val IncomeColorLight = Color(0xFF10B981)  // Emerald Green
 val IncomeColorDark = Color(0xFF34D399)
 
-// --- 新增：AI 特色渐变 (Gemini Signature) ---
-// 用于仪表盘背景或 AI 识别高光
-val AiGradient = Brush.linearGradient(
+// Branding Gradients
+val BrandingGradient = Brush.linearGradient(
     colors = listOf(Color(0xFF4F46E5), Color(0xFF14B8A6))
 )
 
-// --- 新增：毛玻璃/光感辅助色 ---
+// UI Utility Colors
 val GlassWhite = Color(0xCCFFFFFF)
 val GlassBlack = Color(0x990F172A)
 
-// --- 语义化颜色强化 ---
-val ExpenseColor = Color(0xFFF43F5E) // 更鲜艳的玫瑰红
-val IncomeColor = Color(0xFF10B981)  // 翠绿色
+// Semantic Colors
+val SemanticExpense = Color(0xFFF43F5E)
+val SemanticIncome = Color(0xFF10B981)

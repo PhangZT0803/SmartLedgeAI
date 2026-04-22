@@ -20,9 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * 显示 AI 解析来源。
- * source 目前对应 Transaction.source（通知来自哪个 app）。
- * 后续如果 Gemini 回传 confidence，可以加一个 confidence: Double? 参数。
+ * Displays the source of the transaction detection.
  */
 @Composable
 fun AITrustBadge(source: String) {
