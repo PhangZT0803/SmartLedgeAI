@@ -23,8 +23,10 @@ val OnBackground = Color(0xFF191C1E)
 
 val Surface = Color(0xFFF8F9FC)
 val OnSurface = Color(0xFF191C1E)
+val SurfaceContainerLowest = Color(0xFFFFFFFF)
 val SurfaceContainerLow = Color(0xFFF2F4F6)
 val SurfaceContainer = Color(0xFFECEEF0)
+val SurfaceContainerHigh = Color(0xFFE6E8EA)
 val SurfaceContainerHighest = Color(0xFFE1E2E5)
 
 val Outline = Color(0xFF717881)
@@ -53,6 +55,13 @@ val SurfaceDark = Color(0xFF191C1E)
 val OnSurfaceDark = Color(0xFFE1E2E5)
 val SurfaceVariantDark = Color(0xFF414750)
 val OnSurfaceVariantDark = Color(0xFFC1C7D1)
+
+// Semantic Surface Containers for Dark Mode
+val SurfaceContainerLowestDark = Color(0xFF0F1113)
+val SurfaceContainerLowDark = Color(0xFF1E2123)
+val SurfaceContainerDark = Color(0xFF25292C)
+val SurfaceContainerHighDark = Color(0xFF2B3033)
+val SurfaceContainerHighestDark = Color(0xFF363B3F)
 
 // Keep template colors for compatibility if needed elsewhere
 val Purple80 = Color(0xFFD0BCFF)

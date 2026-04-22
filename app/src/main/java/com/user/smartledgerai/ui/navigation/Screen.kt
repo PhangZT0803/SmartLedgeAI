@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Rule
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
@@ -12,6 +13,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     object Verify : Screen("verify", "Verify", Icons.Default.Rule)
     object History : Screen("history", "History", Icons.Default.History)
     object Profile : Screen("profile", "Profile", Icons.Default.Person)
+    object Insights : Screen("insights", "Insights", Icons.Default.TrendingUp)
 }
 
 val bottomNavItems = listOf(
