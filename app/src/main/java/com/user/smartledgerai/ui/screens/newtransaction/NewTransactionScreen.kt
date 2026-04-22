@@ -1,5 +1,6 @@
 package com.user.smartledgerai.ui.screens.newtransaction
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.user.smartledgerai.data.Transaction
 import com.user.smartledgerai.data.TransactionType
@@ -39,6 +41,7 @@ import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.collections.emptyList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,8 +49,7 @@ fun NewTransactionScreen(
     transactionViewModel: TransactionViewModel,
     isEditMode: Boolean,
     transactionToEdit: Transaction?,
-    onBack: () -> Unit = {},
-    onSave: () -> Unit = {}
+    onBack: () -> Unit = {}
 ) {
     // ── State ──
     var amount by remember { mutableStateOf(transactionToEdit?.amount?.toString() ?: "") }
@@ -68,7 +70,7 @@ fun NewTransactionScreen(
     val displayDate = dateFormatter.format(Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis()))
 
     var note by remember { mutableStateOf(transactionToEdit?.description ?: "") }
-
+    val context = LocalContext.current
     // ── UI ──
     Scaffold(
         topBar = {
@@ -120,7 +122,15 @@ fun NewTransactionScreen(
 
             Button(
                 onClick = {
-                    val parsedAmount = amount.toDoubleOrNull() ?: return@Button
+                    val parsedAmount = amount.toDoubleOrNull()
+                    if (parsedAmount == null || parsedAmount <= 0) {
+                        Toast.makeText(context, "Please enter a valid amount", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (selectedCategoryId == -1 && selectedType != TransactionType.TRANSFER) {
+                        Toast.makeText(context, "Please select a category", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
                     transactionViewModel.insertTransaction(
                         Transaction(
                             amount = parsedAmount,
@@ -134,7 +144,14 @@ fun NewTransactionScreen(
                             isVerified = true
                         )
                     )
-                    onSave() }, //Todo Save 清空,连续input
+                    Toast.makeText(context, "Transaction saved!", Toast.LENGTH_SHORT).show()
+                    //清空
+                    amount = ""
+                    toField = ""
+                    fromAccount = ""
+                    note = ""
+                    selectedCategoryId = -1
+                          },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -142,7 +159,7 @@ fun NewTransactionScreen(
             ) {
                 Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Save")
+                Text("Add Transaction")
             }
 
             Spacer(Modifier.height(24.dp))

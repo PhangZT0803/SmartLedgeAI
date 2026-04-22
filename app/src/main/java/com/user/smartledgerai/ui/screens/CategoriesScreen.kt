@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.user.smartledgerai.data.Category
 import com.user.smartledgerai.data.TransactionType
 import com.user.smartledgerai.viewmodel.TransactionViewModel
@@ -46,7 +47,7 @@ import com.user.smartledgerai.viewmodel.TransactionViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoriesScreen(transactionViewModel: TransactionViewModel) {
-    val categories by transactionViewModel.getAllCategories().collectAsState(initial = emptyList())
+    val categories by transactionViewModel.allCategories.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 
     val spendingCategories = categories.filter { it.type == TransactionType.SPENDING }

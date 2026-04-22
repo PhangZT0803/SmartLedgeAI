@@ -1,5 +1,6 @@
 package com.user.smartledgerai.viewmodel
 
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.user.smartledgerai.data.Category
@@ -7,6 +8,7 @@ import com.user.smartledgerai.data.Transaction
 import com.user.smartledgerai.data.TransactionRepository
 import com.user.smartledgerai.data.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -22,15 +24,11 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             transaction -> transaction.timestamp }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun getAllCategories(): StateFlow<List<Category>> = transactionRepository.getAllCategories().map{
-        categoryList -> categoryList.sortedBy {
-            category -> category.name }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    fun getCategoriesByType(transactionType: TransactionType): StateFlow<List<Category>> = transactionRepository.getCategoriesByType(transactionType).map{
-        categoryList -> categoryList.sortedBy {
-            category -> category.name }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val allCategories: StateFlow<List<Category>> = transactionRepository.getAllCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    fun getCategoriesByType(transactionType: TransactionType): Flow<List<Category>> {
+        return transactionRepository.getCategoriesByType(transactionType)
+    }
 
     fun insertTransaction(transaction: Transaction)= viewModelScope.launch {
         transactionRepository.insert(transaction)
