@@ -2,6 +2,14 @@ package com.user.smartledgerai
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import timber.log.Timber
 
 @HiltAndroidApp
-class SmartLedgerAI : Application()
+class SmartLedgerAI : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        if(BuildConfig.DEBUG){
+            Timber.plant(Timber.DebugTree())
+        }
+    }
+}

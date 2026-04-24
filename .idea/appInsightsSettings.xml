@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.user.smartledgerai" />
+                  <option name="mobileSdkAppId" value="1:431947154764:android:8903ec12569a3b626ffbe9" />
+                  <option name="projectId" value="smartledgerai-f6e96" />
+                  <option name="projectNumber" value="431947154764" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

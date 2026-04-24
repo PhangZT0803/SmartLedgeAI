@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SmartLedgerAI</string>
+    <string name="notification_service_label">SmartLedger Notification Access</string>
+    <string name="default_web_client_id">{\n          \"client_id\": \"431947154764-q0o0cermuissqdat5cnusbk0fft18g31.apps.googleusercontent.com\",\n          \"client_type\": 3\n        }</string>
 </resources>
