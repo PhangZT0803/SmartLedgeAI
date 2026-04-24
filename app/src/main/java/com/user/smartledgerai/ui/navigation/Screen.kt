@@ -31,6 +31,5 @@ sealed class ProfileScreenNavigationAction{
 val bottomNavItems = listOf(
     Screen.Dashboard,
     Screen.Verify,
-    Screen.History,
     Screen.Profile,
 )

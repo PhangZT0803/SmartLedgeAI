@@ -87,19 +87,16 @@ fun ProfileScreen(
                         subtitle = "Configure your AI engine",
                         onClick = { /* Future Work */ }
                     )
+                    ProfileMenuItem(
+                        icon = Icons.Default.Category,
+                        title = "Transaction Categories",
+                        subtitle = "Manage income & spending labels",
+                        onClick = {
+                            onAction(ProfileScreenNavigationAction.GoToCategories)
+                        }
+                    )
                 }
             }
-            //3.CategoriesEntry
-            ElevatedCard(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = colors.surface)
-            ){
-            ProfileMenuItem(
-                icon = Icons.Default.Category,
-                title = "Transaction Categories",
-                subtitle = "Manage income & spending labels",
-                onClick = { onAction(ProfileScreenNavigationAction.GoToCategories) }
-            )}
 
             Spacer(Modifier.height(24.dp))
             // 4. LogOut
@@ -111,7 +108,9 @@ fun ProfileScreen(
                     icon = Icons.Default.Logout,
                     title = "Sign Out",
                     titleColor = MaterialTheme.colorScheme.error,
-                    onClick = { authViewModel.signOut() },
+                    onClick = {
+                        authViewModel.signOut()
+                    },
                     showChevron = false
                 )
             }

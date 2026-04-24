@@ -54,28 +54,46 @@ fun MainNavigation() {
     val user by authViewModel.user.collectAsState()
     val transactions = transactionViewModel.transactions.collectAsState()
     // filter returns a list
-    val transactionsToEdit: List<Transaction> = transactions.value.filter{
+    val transactionsToEdit: List<Transaction> = transactions.value.filter {
         !it.isVerified
-        }
+    }
 
     val hasUnverified = transactionsToEdit.isNotEmpty()
     val unverifiedCount = transactionsToEdit.size
 
     var selectedTransactionForEdit by remember { mutableStateOf<Transaction?>(null) }
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showGlobalFab = currentRoute in listOf(
+        Screen.Dashboard.route,
+        Screen.History.route,
+        Screen.Verify.route
+    )
+    val showBottomBar = currentRoute in listOf(
+    Screen.Dashboard.route,
+    Screen.Verify.route,
+    Screen.History.route,
+    Screen.Profile.route
+    )
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                selectedTransactionForEdit = null // Reset for new transaction
-                navController.navigate(Screen.NewTransaction.route)},
-                containerColor = MaterialTheme.colorScheme.primary,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "New")
+            if (showGlobalFab) {
+                FloatingActionButton(
+                    onClick = {
+                        selectedTransactionForEdit = null // Reset for new transaction
+                        navController.navigate(Screen.NewTransaction.route)
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "New")
+                }
             }
         },
         bottomBar = {
+            if(showBottomBar){
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -85,11 +103,8 @@ fun MainNavigation() {
                 shadowElevation = 16.dp
             ) {
                 NavigationBar(
-                    containerColor = Color.Transparent,
-                    modifier = Modifier.height(64.dp),
-                    windowInsets = WindowInsets(0, 0, 0, 0)
+                    containerColor = Color.Transparent
                 ) {
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
                     bottomNavItems.forEach { screen ->
                         NavigationBarItem(
@@ -102,18 +117,33 @@ fun MainNavigation() {
                                         ) {
                                             Text(
                                                 "$unverifiedCount",
-                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                                ),
                                                 color = Color.White
                                             )
                                         }
                                     }) {
-                                        Icon(screen.icon, contentDescription = null, modifier = Modifier.size(20.dp))
+                                        Icon(
+                                            screen.icon,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
                                     }
                                 } else {
-                                    Icon(screen.icon, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    Icon(
+                                        screen.icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
                             },
-                            label = { Text(screen.label, style = MaterialTheme.typography.labelSmall) },
+                            label = {
+                                Text(
+                                    screen.label,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                             onClick = {
                                 navController.navigate(screen.route) {
@@ -128,6 +158,7 @@ fun MainNavigation() {
                     }
                 }
             }
+        }
         }
     ) { innerPadding ->
         NavHost(
@@ -159,7 +190,7 @@ fun MainNavigation() {
                 ) + fadeOut(animationSpec = tween(300))
             }
         ) {
-            composable (Screen.Login.route){ OnBoardingScreen(authViewModel)}
+            composable(Screen.Login.route) { OnBoardingScreen(authViewModel) }
             composable(
                 Screen.Dashboard.route,
                 enterTransition = { fadeIn(animationSpec = tween(300)) },
@@ -202,14 +233,14 @@ fun MainNavigation() {
                     onBack = { navController.popBackStack() }
                 )
             }
-            composable(Screen.History.route) { 
+            composable(Screen.History.route) {
                 HistoryScreen(
                     transactionViewModel,
                     onEditTransaction = { transaction ->
                         selectedTransactionForEdit = transaction
                         navController.navigate(Screen.NewTransaction.route)
                     }
-                ) 
+                )
             }
             composable(
                 Screen.Profile.route,
@@ -219,15 +250,20 @@ fun MainNavigation() {
                 ProfileScreen(
                     profileViewModel,
                     authViewModel,
-                    onAction= { action ->
+                    onAction = { action ->
                         when (action) {
-                            ProfileScreenNavigationAction.GoToAppSelection -> navController.navigate(Screen.AppSelection.route)
-                            ProfileScreenNavigationAction.GoToCategories -> navController.navigate(Screen.Categories.route)
+                            ProfileScreenNavigationAction.GoToAppSelection -> navController.navigate(
+                                Screen.AppSelection.route
+                            )
+
+                            ProfileScreenNavigationAction.GoToCategories -> navController.navigate(
+                                Screen.Categories.route
+                            )
                         }
                     }
                 )
             }
-            composable(Screen.Categories.route) { CategoriesScreen(transactionViewModel)}
+            composable(Screen.Categories.route) { CategoriesScreen(transactionViewModel) }
             composable(Screen.AppSelection.route) { AppSelectionScreen() }
         }
     }
@@ -236,6 +272,11 @@ fun MainNavigation() {
         if (user != null) {
             navController.navigate(Screen.Dashboard.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
+            }
+        } else {
+            // 👈 user 变成 null（即触发了 signOut）：自动回登录页，并清空栈
+            navController.navigate(Screen.Login.route) {
+                popUpTo(navController.graph.id) { inclusive = true }
             }
         }
     }
