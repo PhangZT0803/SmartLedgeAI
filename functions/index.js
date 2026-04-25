@@ -23,15 +23,18 @@ const {GoogleGenerativeAI} = require("@google/generative-ai");
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10 });
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 exports.parseNotification = onCall(
     {
         secrets: ["GEMINI_API_KEY"]
     },
     async (request) => {
-    const {packageName, postTime, text, bigText} = request.data;
+    if (!request.auth) {
+            throw new HttpsError("unauthenticated", "The function must be called while authenticated.");
+        }
 
+    const {packageName, postTime, text, bigText} = request.data;
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
         model: "gemini-2.5-flash",
         generationConfig: {

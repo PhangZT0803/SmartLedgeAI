@@ -38,6 +38,7 @@ class TransactionNotificationService : NotificationListenerService() {
 
     private lateinit var accountDAO: AccountDAO
     private val job = SupervisorJob()
+
     private val serviceScope = CoroutineScope(Dispatchers.IO + job)
     override fun onCreate(){
         super.onCreate()
